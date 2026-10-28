@@ -47,8 +47,8 @@ export default function Results() {
           <div className="eyebrow">כל המדידות במשולש אחד</div>
           <Ternary
             points={[
-              ...(prakriti[0] ? [{ pct: prakriti[0].pct, color: '#1E2430', label: 'חוקה' }] : []),
-              ...(vikriti[0] ? [{ pct: vikriti[0].pct, color: '#E8A33D', label: 'איזון אחרון', pulse: true, below: true }] : []),
+              ...(prakriti[0] ? [{ pct: prakriti[0].pct, color: 'var(--ink)', label: 'חוקה' }] : []),
+              ...(vikriti[0] ? [{ pct: vikriti[0].pct, color: 'var(--ember)', label: 'איזון אחרון', pulse: true, below: true }] : []),
             ]}
             trail={[...vikriti].reverse().map((v) => v.pct)}
             arrow={prakriti[0] && vikriti[0] && !vikriti[0].calm ? [prakriti[0].pct, vikriti[0].pct] : null}

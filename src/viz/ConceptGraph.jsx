@@ -84,29 +84,29 @@ export default function ConceptGraph() {
           return (
             <motion.line
               key={`${a}-${b}`} x1={A.x} y1={A.y} x2={B.x} y2={B.y}
-              stroke={on && hover ? GROUP_COLOR[byId[hover].group] : '#8A7B68'} strokeWidth={on && hover ? 2.5 : 1.3}
-              initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: on ? 0.75 : 0.12 }}
-              animate={{ opacity: on ? 0.75 : 0.12 }} viewport={{ once: true }} transition={{ duration: 0.8, delay: reduce ? 0 : 0.02 * i }}
+              stroke={on && hover ? 'var(--brass)' : 'var(--line)'} strokeWidth={on && hover ? 1.5 : 0.8}
+              initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: on ? 0.7 : 0.1 }}
+              animate={{ opacity: on ? 0.7 : 0.1 }} viewport={{ once: true }} transition={{ duration: 1.2, delay: reduce ? 0 : 0.03 * i, ease: [0.22, 1, 0.36, 1] }}
             />
           );
         })}
         {nodes.map((n, i) => {
-          const r = 14 + (degree[n.id] || 0) * 2.6;
+          const r = 4 + (degree[n.id] || 0) * 1.4;
           const on = near(n.id);
           return (
             <motion.g
               key={n.id} role="link" tabIndex={0} aria-label={term[n.id].term}
               onMouseEnter={() => setHover(n.id)} onMouseLeave={() => setHover(null)} onFocus={() => setHover(n.id)} onBlur={() => setHover(null)}
               onClick={() => go(`/library/${n.id}`)} onKeyDown={(e) => e.key === 'Enter' && go(`/library/${n.id}`)}
-              initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }}
-              transition={{ type: 'spring', delay: reduce ? 0 : 0.3 + 0.04 * i }}
+              initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+              transition={{ duration: 0.9, delay: reduce ? 0 : 0.3 + 0.05 * i, ease: [0.22, 1, 0.36, 1] }}
               style={{ cursor: 'pointer', originX: `${n.x}px`, originY: `${n.y}px` }}
             >
-              <motion.g animate={reduce ? {} : { y: [0, -3, 0] }} transition={{ duration: 3 + (i % 4), repeat: Infinity, ease: 'easeInOut' }}>
-                <circle cx={n.x} cy={n.y} r={r + 6} fill={GROUP_COLOR[n.group]} opacity={hover === n.id ? 0.25 : 0} />
+              <motion.g animate={reduce ? {} : { y: [0, -2, 0] }} transition={{ duration: 8 + (i % 4), repeat: Infinity, ease: 'easeInOut' }}>
+                <circle cx={n.x} cy={n.y} r={r * 3} fill="var(--ember)" opacity={hover === n.id ? 0.18 : 0} style={{ transition: 'opacity .5s' }} />
+                <circle cx={n.x} cy={n.y} r={r + 5} fill="none" stroke={GROUP_COLOR[n.group]} strokeWidth="1" opacity={on ? 0.7 : 0.2} />
                 <circle cx={n.x} cy={n.y} r={r} fill={GROUP_COLOR[n.group]} opacity={on ? 1 : 0.25} />
-                <ellipse cx={n.x - r * 0.25} cy={n.y - r * 0.4} rx={r * 0.55} ry={r * 0.25} fill="#fff" opacity={on ? 0.4 : 0.1} />
-                <text x={n.x} y={n.y + r + 16} textAnchor="middle" fontSize="13" fontWeight="600" className="svg-ink graph-label" opacity={on ? 1 : 0.3}
+                <text x={n.x} y={n.y + r + 20} textAnchor="middle" fontSize="13" className="svg-ink graph-label" opacity={on ? 1 : 0.3}
                   style={{ paintOrder: 'stroke', stroke: 'var(--bg)', strokeWidth: 4 }}>
                   {term[n.id].term}
                 </text>
@@ -121,7 +121,7 @@ export default function ConceptGraph() {
             <span key={g.id}><i style={{ background: GROUP_COLOR[g.id] }} />{g.title}</span>
           ))}
         </div>
-        עמדו על מושג כדי לראות את הקשרים שלו, ולחצו כדי לפתוח אותו. גודל העיגול מבטא את מספר הקשרים.
+        עמדו על מושג כדי לראות את הקשרים שלו, ולחצו כדי לפתוח אותו. גודל הנקודה מבטא את מספר הקשרים.
       </figcaption>
     </figure>
   );

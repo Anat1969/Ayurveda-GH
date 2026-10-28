@@ -43,7 +43,7 @@ export default function GunaLab({ compact = false }) {
         <div className="gauges" aria-live="polite">
           {ORDER.map((d) => {
             const s = effect[d].score;
-            const h = Math.min(Math.abs(s), 5) * 18;
+            const h = Math.min(Math.abs(s), 5) * 9.5;
             return (
               <div key={d} className="gauge">
                 <div className="gauge-tube">
@@ -53,10 +53,10 @@ export default function GunaLab({ compact = false }) {
                     style={{ background: DOSHA_COLOR[d], [s >= 0 ? 'bottom' : 'top']: '50%' }}
                     initial={false}
                     animate={{ height: `${h}%` }}
-                    transition={{ type: 'spring', stiffness: 160, damping: 13 }}
+                    transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
                   />
                 </div>
-                <b style={{ color: DOSHA_COLOR[d] }}>{DNAME[d]}</b>
+                <b className="svg-display" style={{ color: DOSHA_COLOR[d], fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 21 }}>{DNAME[d]}</b>
                 <span className="mono small">{s > 0 ? `מגביר · ${s}` : s < 0 ? `מאזן · ${-s}` : 'ללא שינוי'}</span>
               </div>
             );

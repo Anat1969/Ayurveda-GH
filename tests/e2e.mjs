@@ -98,13 +98,14 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
 
   // שכבה חזותית
   await page.goto(`${BASE}/#/`);
-  ok(await page.locator('.hero-scene svg').isVisible(), 'home hero scene renders');
+  ok(await page.locator('.hero .anatomy img').isVisible(), 'home hero shows the anatomical illustration');
+  ok(await page.evaluate(() => { const i = document.querySelector('.hero .anatomy img'); return i.complete && i.naturalWidth > 0; }), 'anatomy image loaded');
+  ok((await page.locator('.hero figcaption').textContent()).includes('Mariana Ruiz'), 'anatomy credit shown');
   ok(await page.locator('text=עכשיו, לפי המסורת').isVisible(), 'home shows the live now card');
   const centre = await page.locator('.now-grid svg text').allTextContents();
   ok(centre.some((t) => ['ואטה', 'פיטה', 'קאפה'].includes(t.trim())), 'dosha clock names the current dosha');
-  await page.locator('.hero-scene').hover({ position: { x: 40, y: 200 } });
-  await page.waitForTimeout(300);
-  ok(await page.locator('.hero-caption').isVisible(), 'hero caption visible');
+  await page.locator('.hero .seat.d-pitta').click();
+  ok((await page.locator('.hero .seat.d-pitta').getAttribute('aria-pressed')) === 'true', 'body map seat selects pitta');
 
   await page.goto(`${BASE}/#/journey`);
   ok(await page.locator('.chapter').count() === 10, 'journey has ten chapters');
@@ -263,7 +264,7 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.goto(`${BASE}/#/`);
   const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  ok(bg === 'rgb(30, 36, 48)', `dark mode body background ${bg}`);
+  ok(bg === 'rgb(15, 26, 20)', `dark mode body background ${bg}`);
   await page.screenshot({ path: `${SHOTS}/home-dark.png` });
   await page.goto(`${BASE}/#/maps`);
   await page.locator('#map-graph').scrollIntoViewIfNeeded();

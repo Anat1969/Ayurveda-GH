@@ -80,8 +80,8 @@ export function VikritiResult({ result, prakriti }) {
       <div className="stone viz-stone">
         <Ternary
           points={[
-            ...(prakriti ? [{ pct: prakriti.pct, color: '#1E2430', label: 'חוקה', r: 9 }] : []),
-            { pct: result.pct, color: '#E8A33D', label: 'עכשיו', pulse: true, below: true },
+            ...(prakriti ? [{ pct: prakriti.pct, color: 'var(--ink)', label: 'חוקה', r: 9 }] : []),
+            { pct: result.pct, color: 'var(--ember)', label: 'עכשיו', pulse: true, below: true },
           ]}
           arrow={prakriti && !result.calm ? [prakriti.pct, result.pct] : null}
           label="האיזון הנוכחי ביחס לחוקה"
