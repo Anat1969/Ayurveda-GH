@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { motion, useScroll, useSpring, useReducedMotion } from 'framer-motion';
 import { useRoute } from './lib/router.js';
 import { TopBar, Footer } from './components/Shell.jsx';
 import Home from './pages/Home.jsx';
@@ -8,10 +9,14 @@ import Vikriti from './pages/Vikriti.jsx';
 import Consultant from './pages/Consultant.jsx';
 import Results from './pages/Results.jsx';
 import Safety from './pages/Safety.jsx';
+import Journey from './pages/Journey.jsx';
+import Maps from './pages/Maps.jsx';
 import { conceptById } from './data/concepts.js';
 
 const TITLES = {
   home: '',
+  journey: 'המסע',
+  maps: 'מפות',
   library: 'ספרייה',
   prakriti: 'שאלון חוקה',
   vikriti: 'איזון נוכחי',
@@ -24,6 +29,10 @@ function Page({ route }) {
   switch (route.page) {
     case 'library':
       return route.param ? <Concept id={route.param} /> : <Library />;
+    case 'journey':
+      return <Journey />;
+    case 'maps':
+      return <Maps />;
     case 'prakriti':
       return <Prakriti />;
     case 'vikriti':
@@ -39,8 +48,15 @@ function Page({ route }) {
   }
 }
 
+function ScrollProgress() {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 24 });
+  return <motion.div className="scroll-progress" style={{ scaleX }} aria-hidden="true" />;
+}
+
 export default function App() {
   const route = useRoute();
+  const reduce = useReducedMotion();
   useEffect(() => {
     const sub = route.page === 'library' && route.param ? conceptById(route.param)?.term : TITLES[route.page];
     document.title = sub ? `${sub} · יועץ איורוודה` : 'יועץ איורוודה';
@@ -49,10 +65,16 @@ export default function App() {
   return (
     <div className="app">
       <TopBar route={route} />
+      <ScrollProgress />
       <main>
-        <div className="wrap" key={route.path}>
+        <motion.div
+          className="wrap" key={route.path}
+          initial={reduce ? false : { opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <Page route={route} />
-        </div>
+        </motion.div>
       </main>
       <Footer />
     </div>

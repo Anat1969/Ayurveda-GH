@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { PRAKRITI_QUESTIONS, PRAKRITI_INTRO } from '../data/prakriti.js';
 import { PRAKRITI_TEXT } from '../data/recommendations.js';
 import { scorePrakriti, prakritiDrift, CONFIDENCE_TEXT, DRIFT_TEXT } from '../lib/scoring.js';
-import { latestResult, saveResult } from '../lib/storage.js';
+import { latestResult, loadResults, saveResult } from '../lib/storage.js';
+import { Ternary, PrakritiMap } from '../viz/index.jsx';
 import { DoshaBars, doshaList, Claim } from '../components/Shell.jsx';
 
 export function PrakritiMethod() {
@@ -31,10 +32,21 @@ export function PrakritiMethod() {
   );
 }
 
-export function PrakritiResult({ result, previous }) {
+export function PrakritiResult({ result, previous, history = [] }) {
   const drift = previous ? prakritiDrift(result.pct, previous.pct) : null;
   return (
     <div className="stack">
+      <div className="grid two">
+        <div className="stone viz-stone">
+          <Ternary
+            points={[{ pct: result.pct, color: '#1E2430', label: 'החוקה שלי', pulse: true }]}
+            trail={history.map((h) => h.pct)}
+            label="החוקה שלי במשולש הדושות"
+          />
+          <p className="small muted" style={{ margin: 0 }}>
+            {history.length > 1 ? 'הנקודות האפורות הן מילויים קודמים. ככל שהן קרובות, התוצאה יציבה יותר.' : 'המיקום במשולש הוא היחס בין שלוש הדושות.'}
+          </p>
+        </div>
       <div className="stone">
         <div className="eyebrow">הדפוס שעלה</div>
         <h2>
@@ -42,6 +54,7 @@ export function PrakritiResult({ result, previous }) {
         </h2>
         <p className="muted">{result.type.map((d) => PRAKRITI_TEXT[d]).join(' ')}</p>
         <DoshaBars pct={result.pct} />
+      </div>
       </div>
       <div className="meta">
         <div>
@@ -108,7 +121,10 @@ export default function Prakriti() {
             <a className="btn ghost" href="#/library/prakriti">מה זו חוקה</a>
           </div>
         </div>
-        <PrakritiMethod />
+        <div className="grid two">
+          <div className="stone viz-stone"><PrakritiMap /></div>
+          <PrakritiMethod />
+        </div>
       </div>
     );
   }
@@ -118,7 +134,7 @@ export default function Prakriti() {
       <div className="stack">
         <div className="eyebrow">שאלון חוקה · תוצאה</div>
         <h1>הדפוס שלי</h1>
-        <PrakritiResult result={saved.result} previous={previous} />
+        <PrakritiResult result={saved.result} previous={previous} history={[...loadResults('prakriti')].reverse()} />
         <p className="small muted">{saved.ok ? 'התוצאה נשמרה במכשיר הזה בלבד.' : 'לא הצלחתי לשמור את התוצאה במכשיר. היא תוצג רק עכשיו.'}</p>
         <div className="row">
           <a className="btn warm" href="#/vikriti">להמשיך לאיזון הנוכחי</a>
@@ -129,8 +145,10 @@ export default function Prakriti() {
     );
   }
 
+  const live = scorePrakriti(answers, PRAKRITI_QUESTIONS);
   return (
-    <div className="stack" style={{ maxWidth: 680 }}>
+    <div className="quiz-layout">
+    <div className="stack">
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <span className="mono small">{step + 1} / {total}</span>
         <span className="eyebrow" style={{ margin: 0 }}>{q.area}</span>
@@ -160,6 +178,12 @@ export default function Prakriti() {
         <button className="btn ghost" disabled={step === 0} onClick={() => setStep(step - 1)}>הקודמת</button>
         <button className="btn ghost" onClick={skip}>לא מתאים לי, לדלג</button>
       </div>
+    </div>
+    <aside className="stone viz-stone live-panel" aria-label="התוצאה מתעדכנת">
+      <div className="eyebrow">בזמן אמת</div>
+      <Ternary points={[{ pct: live.pct, color: '#1E2430', label: live.answered ? 'הנקודה שלי' : 'עוד לא ענית', pulse: true }]} label="הנקודה שלי במשולש" />
+      <p className="small muted" style={{ margin: 0 }}>כל תשובה מזיזה את הנקודה לעבר דושה אחת. אחרי {live.answered} תשובות.</p>
+    </aside>
     </div>
   );
 }

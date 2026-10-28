@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { GROUPS, CONCEPTS, conceptById } from '../data/concepts.js';
 import { Claim } from '../components/Shell.jsx';
+import { ConceptViz, ConceptGraph } from '../viz/index.jsx';
 
 export function Library() {
   useEffect(() => {
@@ -17,6 +18,9 @@ export function Library() {
         כל פסקה מסומנת: <Claim type="tradition" /> מה שכתוב בטקסטים, <Claim type="assessment" /> פרשנות,{' '}
         <Claim type="research" /> מה שנבדק במחקר, ו<Claim type="none" /> כשלא נבדק.
       </p>
+      <div className="stone viz-stone" style={{ marginTop: 24 }}>
+        <ConceptGraph />
+      </div>
       {GROUPS.map((g) => (
         <section key={g.id} id={`g-${g.id}`} className="section" style={{ scrollMarginTop: 130 }}>
           <h2>{g.title}</h2>
@@ -64,6 +68,9 @@ export function Concept({ id }) {
         {c.term}
       </h1>
       <p className="lead">{c.short}</p>
+      <div className="concept-viz">
+        <ConceptViz id={c.id} dosha={c.dosha} />
+      </div>
       <div className="stack" style={{ marginTop: 28 }}>
         {c.sections.map((s, i) => (
           <motion.div

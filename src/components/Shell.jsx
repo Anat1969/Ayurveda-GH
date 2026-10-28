@@ -5,8 +5,11 @@ import { DOSHAS } from '../lib/scoring.js';
 import { clearResults } from '../lib/storage.js';
 
 export const DEV_CHAT = 'https://claude.ai/code/session_018qeN17QgigYE2JRu1PLrNE';
+export const RESEARCH = 'https://claude.ai/chat/4f50087b-5093-4ead-aca6-167d52e82657';
 
 const NAV = [
+  { page: 'journey', label: 'המסע' },
+  { page: 'maps', label: 'מפות' },
   { page: 'library', label: 'ספרייה' },
   { page: 'prakriti', label: 'חוקה' },
   { page: 'vikriti', label: 'איזון נוכחי' },
@@ -58,7 +61,7 @@ export function TopBar({ route }) {
             </a>
           ))}
         </nav>
-        <ai-menu ref={menuRef} chat={DEV_CHAT}></ai-menu>
+        <ai-menu ref={menuRef} chat={DEV_CHAT} research={RESEARCH}></ai-menu>
       </div>
     </header>
   );
