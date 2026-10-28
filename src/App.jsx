@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { motion, useScroll, useSpring, useReducedMotion } from 'framer-motion';
 import { useRoute } from './lib/router.js';
-import { TopBar, Footer } from './components/Shell.jsx';
+import { TopBar, Footer, Ambient } from './components/Shell.jsx';
 import Home from './pages/Home.jsx';
 import { Library, Concept } from './pages/Library.jsx';
 import Prakriti from './pages/Prakriti.jsx';
@@ -64,6 +64,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <Ambient />
       <TopBar route={route} />
       <ScrollProgress />
       <main>

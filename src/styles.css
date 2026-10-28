@@ -323,3 +323,80 @@ hr.soft { border: 0; border-top: 1px solid var(--hair); margin: 34px 0; }
 .seat-role { display: block; font-size: 13px; color: var(--muted); }
 .anatomy-hero .anatomy-layout { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
 @media (max-width: 640px) { .anatomy-hero .anatomy-layout { grid-template-columns: minmax(0, 1fr); } }
+
+/* ===== השפה מתמונות ההשראה: קטיפה, פליז, אור, אדים ופריזמה ===== */
+:root {
+  --velvet: #13241A;
+  --velvet-2: #1B3324;
+  --gold-hi: #F1D79A;
+  --gold: #C9A45C;
+  --gold-lo: #8C6A2E;
+}
+
+/* כותרות פליז: ברק מתכתי עדין, לא זהב צעקני */
+h1, h2.brass-text, .brass-text {
+  background: linear-gradient(172deg, #A98244 0%, #7A5E2A 46%, #5E4620 70%, #9C7A3C 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* פס קטיפה: ירוק עמוק ברוחב המסך, כמו הבד בתמונה */
+.velvet {
+  position: relative; color: #EFE6D2; isolation: isolate;
+  margin-inline: calc(50% - 50vw); padding: 89px max(34px, calc(50vw - 580px));
+  background:
+    radial-gradient(1100px 520px at 82% 0%, rgba(232, 154, 60, .22), transparent 60%),
+    radial-gradient(700px 400px at 10% 100%, rgba(143, 175, 122, .10), transparent 70%),
+    linear-gradient(180deg, var(--velvet-2), var(--velvet));
+}
+.velvet::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; opacity: .5; pointer-events: none;
+  background-image: repeating-linear-gradient(100deg, rgba(255,255,255,.018) 0 2px, transparent 2px 5px);
+}
+.velvet h1, .velvet h2, .velvet .brass-text {
+  background: linear-gradient(172deg, var(--gold-hi) 0%, var(--gold) 42%, var(--gold-lo) 68%, #E3C27E 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.velvet h3, .velvet .lead, .velvet p { color: #EFE6D2; }
+.velvet .eyebrow, .velvet .muted, .velvet .small { color: #C9BFA8; }
+.velvet .spine::before { background: var(--gold); }
+.velvet a:not(.btn) { color: var(--gold-hi); }
+.velvet .btn.warm { background: var(--gold); border-color: var(--gold); color: #13241A; }
+.velvet .btn.warm:hover { background: #EFE6D2; border-color: #EFE6D2; }
+.velvet .btn.ghost { color: #EFE6D2; border-color: rgba(201, 164, 92, .6); }
+.velvet .claim.tradition { color: var(--gold-hi); }
+.velvet .claim.assessment { color: #A9C4C9; }
+.velvet .claim.research { color: #A8C98F; }
+.velvet .stone { background: rgba(255,255,255,.04); border-color: rgba(201,164,92,.28); box-shadow: none; }
+.velvet {
+  --ink: #EFE6D2; --muted: #C9BFA8; --brass: #C9A45C; --line: #7E6A40; --hair: rgba(201,164,92,.22);
+  --raised: #1B3324; --bg: #13241A; --vata: #A9C4C9; --pitta: #E0874E; --kapha: #A8C98F;
+}
+
+/* צילום: חומר ואור אמיתיים, עם קרדיט */
+.photo { position: relative; margin: 0; overflow: hidden; }
+.photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.photo figcaption { position: absolute; inset-inline-start: 13px; bottom: 8px; font-family: var(--font-mono); font-size: 10.5px; color: rgba(239,230,210,.75); text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+.photo::after { content: ''; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 120px rgba(19,36,26,.35); }
+
+/* הרו: קטיפה, צילום ואור, כמו הפוסטר */
+.hero-velvet { display: grid; gap: 55px; grid-template-columns: minmax(0, 1fr); align-items: center; min-height: calc(100vh - 72px); padding-top: 55px; padding-bottom: 55px; margin-top: -34px; }
+@media (min-width: 900px) { .hero-velvet { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); } }
+.hero-velvet .photo { aspect-ratio: 16 / 10; box-shadow: 0 34px 89px -34px rgba(0,0,0,.65); }
+
+/* אור, אדים ופריזמה ברקע */
+.ambient { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.app > *:not(.ambient) { position: relative; z-index: 1; }
+.sun { position: absolute; top: -220px; inset-inline-start: -120px; width: 620px; height: 620px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 214, 150, .55), rgba(232, 154, 60, .16) 45%, transparent 70%); filter: blur(8px); }
+.fleck { position: absolute; width: 10px; height: 10px; border-radius: 50%; filter: blur(2px); opacity: 0; animation: fleck 14s ease-in-out infinite; mix-blend-mode: multiply; }
+@keyframes fleck { 0%, 100% { opacity: 0; transform: translate(0, 0) scale(.8); } 40%, 60% { opacity: .55; } 50% { transform: translate(-30px, 18px) scale(1.15); } }
+.wisp-field { position: absolute; display: grid; gap: 0; }
+.steam-line { fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; opacity: 0; animation: steam 7s ease-out infinite; transform-box: fill-box; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fleck { mix-blend-mode: screen; } }
+.now-grid { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .now-grid { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); } .now-grid .now-card { grid-column: 1 / -1; } }
+.now-photo { min-height: 320px; }
+.photo-band { margin-inline: calc(50% - 50vw); height: 46vh; min-height: 300px; }
+.chapter.velvet { border-top: 0; }
+.chapter-photo { margin-top: 21px; aspect-ratio: 3 / 2; max-width: 460px; }
+.footer { background: var(--velvet); color: #C9BFA8; border-top: 0; }
+.footer .emergency b { color: #EFE6D2; }
