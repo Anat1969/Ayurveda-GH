@@ -15,7 +15,7 @@ const ANCHOR = {
 };
 
 // פריסה בכוח: חישוב דטרמיניסטי אחד, כך שהמפה זהה בכל טעינה.
-function layout() {
+export function layout() {
   const nodes = CONCEPTS.map((c, i) => {
     const a = (i / CONCEPTS.length) * Math.PI * 2;
     return { id: c.id, group: c.group, x: W / 2 + Math.cos(a) * 160, y: H / 2 + Math.sin(a) * 140, vx: 0, vy: 0 };

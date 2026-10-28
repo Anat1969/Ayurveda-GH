@@ -1,15 +1,52 @@
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import ElementsFlow from './ElementsFlow.jsx';
-import DoshaClock from './DoshaClock.jsx';
-import { SeasonWheel, LifeStages } from './Cycles.jsx';
+import { useMemo as useMemoR } from 'react';
+import ElementsFlow2D from './ElementsFlow.jsx';
+import DoshaClock2D from './DoshaClock.jsx';
+import { SeasonWheel as SeasonWheel2D, LifeStages as LifeStages2D } from './Cycles.jsx';
 import BodyMap from './BodyMap.jsx';
-import { DhatuCascade, AgniFlames } from './Digestion.jsx';
-import Ternary from './Ternary.jsx';
+import { DhatuCascade as DhatuCascade2D, AgniFlames as AgniFlames2D } from './Digestion.jsx';
+import Ternary2D from './Ternary.jsx';
 import GunaLab from './GunaLab.jsx';
-import ConceptGraph from './ConceptGraph.jsx';
-import { ClaimMeter, SafetyFlow } from './Evidence.jsx';
-import { TasteWheel, DoshaBuild } from './Structure.jsx';
+import ConceptGraph2D, { layout as graphLayout } from './ConceptGraph.jsx';
+import { ClaimMeter, SafetyFlow as SafetyFlow2D } from './Evidence.jsx';
+
+// הסצנות נטענות רק כשצריך אותן, כך שהדף הראשון נשאר מהיר
+const s1 = () => import('../three/Scenes1.jsx');
+const s2 = () => import('../three/Scenes2.jsx');
+const lz = (load, name) => lazy(() => load().then((m) => ({ default: m[name] })));
+const ElementsScene = lz(s1, 'ElementsScene');
+const BuildScene = lz(s1, 'BuildScene');
+const TastesScene = lz(s1, 'TastesScene');
+const PrismScene = lz(s2, 'PrismScene');
+const GatesScene = lz(s2, 'GatesScene');
+const ClockScene = lz(s2, 'ClockScene');
+const AgniScene = lz(s2, 'AgniScene');
+const DhatuScene = lz(s2, 'DhatuScene');
+const SeasonsScene = lz(s2, 'SeasonsScene');
+const LifeScene = lz(s2, 'LifeScene');
+const ConstellationScene = lz(s2, 'ConstellationScene');
+import { TasteWheel as TasteWheel2D, DoshaBuild as DoshaBuild2D } from './Structure.jsx';
+import { lazy, Suspense } from 'react';
+import { hasWebGL } from '../three/webgl.js';
+
+// בתלת מימד כשיש WebGL, ובשטוח רק כגיבוי
+const pick = (Three, Flat) => function Viz(props) {
+  if (!hasWebGL()) return <Flat {...props} />;
+  return <Suspense fallback={<div className="stage3d loading" aria-hidden="true" />}><Three {...props} /></Suspense>;
+};
+const TasteWheel = pick(TastesScene, TasteWheel2D);
+const DoshaBuild = pick(BuildScene, DoshaBuild2D);
+const ElementsFlow = pick(ElementsScene, ElementsFlow2D);
+const Ternary = pick(PrismScene, Ternary2D);
+const SafetyFlow = pick(GatesScene, SafetyFlow2D);
+const DoshaClock = pick(ClockScene, DoshaClock2D);
+const AgniFlames = pick(AgniScene, AgniFlames2D);
+const DhatuCascade = pick(DhatuScene, DhatuCascade2D);
+const SeasonWheel = pick(SeasonsScene, SeasonWheel2D);
+const LifeStages = pick(LifeScene, LifeStages2D);
+function Constellation() { const l = useMemoR(graphLayout, []); return <ConstellationScene layout={l} />; }
+const ConceptGraph = pick(Constellation, ConceptGraph2D);
 
 export { TasteWheel, DoshaBuild, ElementsFlow, DoshaClock, SeasonWheel, LifeStages, BodyMap, DhatuCascade, AgniFlames, Ternary, GunaLab, ConceptGraph, ClaimMeter, SafetyFlow };
 

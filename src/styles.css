@@ -507,3 +507,72 @@ main { padding: 0; }
 .section-item { padding-top: 10px; }
 .sections { gap: 10px; }
 .safety-tabs .list-plain li { margin: 2px 0; font-size: 15px; line-height: 23px; }
+
+/* ===== תלת מימד: נושא מואר ושכבת סכמה (תיקון של ענת, 2026-10-28) ===== */
+.stage3d { position: relative; width: 100%; height: clamp(320px, 78vw, 560px); overflow: hidden; }
+.stage3d canvas { display: block; touch-action: pan-y; }
+@media (min-width: 1024px) and (min-height: 620px) {
+  .stage3d { height: calc(var(--screen-h) - 150px); }
+  .scene.tastes3d .stage3d { height: calc(var(--screen-h) - 290px); }
+  .map-stage .stage3d { height: calc(var(--screen-h) - 210px); }
+  .map-stage .scene.tastes3d .stage3d { height: calc(var(--screen-h) - 330px); }
+}
+.flabel { position: relative; display: grid; justify-items: center; gap: 0; white-space: nowrap; color: var(--ink); direction: rtl; user-select: none;
+  text-shadow: 0 0 10px var(--bg), 0 0 4px var(--bg), 0 0 2px var(--bg);
+  opacity: 0; animation: flabel-in .9s var(--ease) forwards, flabel-float 7s ease-in-out infinite; animation-delay: var(--delay, 0s), calc(var(--delay, 0s) + .9s); }
+.flabel b { font-family: var(--font-display); font-weight: 400; font-size: 19px; line-height: 22px; color: var(--tone, var(--ink)); letter-spacing: .01em; }
+.flabel span { font-size: 12.5px; line-height: 17px; color: var(--muted); }
+.flabel-l b { font-size: 26px; line-height: 30px; }
+.flabel-s b { font-size: 15px; line-height: 19px; font-family: var(--font-sans); font-weight: 600; }
+.flabel.on b { text-decoration: underline; text-decoration-color: var(--tone, var(--brass)); text-underline-offset: 5px; text-decoration-thickness: 1px; }
+.flabel[role="button"] { cursor: pointer; }
+@keyframes flabel-in { from { opacity: 0; filter: blur(3px); } to { opacity: 1; filter: none; } }
+@keyframes flabel-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -4px; } }
+@media (prefers-reduced-motion: reduce) { .flabel { opacity: 1; animation: none; } }
+.scene figcaption, .scene .caption { font-size: 14px; }
+.seg-wrap { flex-wrap: wrap; }
+.scene { position: relative; }
+.legend-block.overlay { position: absolute; inset-inline-end: 0; top: 4%; width: min(300px, 34%); z-index: 30; text-shadow: 0 0 12px var(--bg), 0 0 4px var(--bg); }
+@media (max-width: 720px) { .legend-block.overlay { position: static; width: auto; } }
+.scene.stacked .legend-block { grid-template-columns: minmax(0, 1fr); }
+@container (min-width: 720px) {
+  .scene.stacked .legend-block { grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); align-items: start; column-gap: 34px; }
+  .scene.stacked .legend-block .caption { grid-column: 1 / -1; }
+}
+@media (min-width: 1024px) and (min-height: 620px) {
+  .split.viz-first, .split.wide-viz { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 34px; }
+}
+.vessels-wrap { display: grid; gap: 5px; min-width: 0; }
+.stage3d.vessels { height: clamp(260px, 60vw, 380px); }
+@media (min-width: 1024px) and (min-height: 620px) { .stage3d.vessels { height: calc(var(--screen-h) - 400px); } }
+.gauges-line { display: flex; justify-content: space-around; gap: 13px; font-size: 14px; }
+.star-label { background: none; border: 0; padding: 2px 4px; font: inherit; font-size: 13.5px; color: var(--ink); cursor: pointer; white-space: nowrap;
+  text-shadow: 0 0 8px var(--bg), 0 0 3px var(--bg), 0 0 2px var(--bg); transition: opacity .4s var(--ease); }
+.star-label.dim { opacity: .3; }
+.star-label:hover, .star-label:focus-visible { color: var(--brass); }
+.gate-legend li[aria-current="true"] { padding-inline-start: 8px; }
+@media (min-width: 1024px) and (min-height: 620px) {
+  .live-panel .stage3d { height: calc(var(--screen-h) - 120px); }
+  .stage.mini .stage3d { height: calc(var(--screen-h) - 380px); }
+  .gates3d .stage3d { height: calc(var(--screen-h) - 200px); }
+  .agni3d .stage3d { height: calc(var(--screen-h) - 280px); }
+}
+@container (min-width: 760px) { .viz.gates3d { grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); align-items: center; gap: 21px; } .viz.gates3d figcaption { grid-column: 1 / -1; } }
+.guna-lab .lab-body { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 720px) { .guna-lab .lab-body { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); } }
+@media (min-width: 1024px) and (min-height: 620px) {
+  .stage .tabbed .stage3d, .concept-viz .stage3d { height: calc(var(--screen-h) - 220px); }
+}
+@media (min-width: 1024px) and (min-height: 620px) and (max-height: 860px) {
+  .safety-tabs .list-plain li { font-size: 14px; line-height: 21px; margin: 1px 0; }
+  .alert p { font-size: 14.5px; line-height: 22px; }
+  .concept .lead { font-size: 16px; line-height: 25px; }
+}
+@container (max-width: 759px) {
+  .viz.gates3d .gate-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 21px; }
+  .viz.gates3d .gate-legend li { font-size: 13.5px; line-height: 19px; padding: 6px 0; }
+  .viz.gates3d .gate-out { font-size: 12.5px; }
+}
+@media (min-width: 1024px) and (min-height: 620px) {
+  .stage:not(.map-stage) .gates3d .stage3d { height: calc(var(--screen-h) - 400px); }
+}
