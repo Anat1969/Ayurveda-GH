@@ -3,7 +3,7 @@ import { CONCEPTS } from '../data/concepts.js';
 import { PRAKRITI_TEXT } from '../data/recommendations.js';
 import { CLOCK_TEXT, SEASON_TEXT, MONTH_DOSHA, MONTHS, DOSHA_COLOR, dosha24 } from '../data/viz.js';
 import { latestResult } from '../lib/storage.js';
-import { Claim, doshaList, formatDate } from '../components/Shell.jsx';
+import { Claim, doshaList, formatDate, Steam } from '../components/Shell.jsx';
 import { BodyMap, DoshaClock, ConceptGraph, Ternary } from '../viz/index.jsx';
 
 const DNAME = { vata: 'ואטה', pitta: 'פיטה', kapha: 'קאפה' };
@@ -28,7 +28,7 @@ export default function Home() {
 
   return (
     <>
-      <section className="hero">
+      <section className="velvet hero-velvet">
         <motion.div className="spine" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: EASE }}>
           <div>
             <div className="eyebrow">איורוודה קלאסית · צ׳ראקה וסושרוטה</div>
@@ -43,14 +43,26 @@ export default function Home() {
             </div>
           </div>
         </motion.div>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.2, delay: 0.2, ease: EASE }}>
-          <BodyMap hero />
-        </motion.div>
+        <motion.figure className="photo" initial={{ opacity: 0, scale: 1.02 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.6, ease: EASE }}>
+          <img src="/photos/bowl.png" alt="קערת פליז עם מים ועלי בזיליקום קדוש, מוארת מאחור באור בוקר" />
+          <Steam style={{ left: '46%', top: '18%' }} />
+          <figcaption>צילום מבוים · נוצר ב-Canva</figcaption>
+        </motion.figure>
+      </section>
+
+      <section className="section">
+        <div className="eyebrow">הגוף, במבט מדעי</div>
+        <h2>אנטומיה אמיתית, ומעליה המסורת</h2>
+        <motion.div className="stone viz-stone" {...rise()}><BodyMap /></motion.div>
       </section>
 
       <section className="section now">
         <div className="now-grid">
           <motion.div className="stone viz-stone" {...rise()}><DoshaClock compact /></motion.div>
+          <motion.figure className="photo now-photo" {...rise(0.05)}>
+            <img src="/photos/steam.png" alt="כוס קרמיקה מעלה אדים ליד חלון בזריחה, ופריזמה תלויה שמפזרת קשתות אור" />
+            <figcaption>צילום מבוים · נוצר ב-Canva</figcaption>
+          </motion.figure>
           <motion.div className="now-card" {...rise(0.1)}>
             <div className="eyebrow">עכשיו, לפי המסורת</div>
             <h2>

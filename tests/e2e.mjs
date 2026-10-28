@@ -98,14 +98,16 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
 
   // שכבה חזותית
   await page.goto(`${BASE}/#/`);
-  ok(await page.locator('.hero .anatomy img').isVisible(), 'home hero shows the anatomical illustration');
-  ok(await page.evaluate(() => { const i = document.querySelector('.hero .anatomy img'); return i.complete && i.naturalWidth > 0; }), 'anatomy image loaded');
-  ok((await page.locator('.hero figcaption').textContent()).includes('Mariana Ruiz'), 'anatomy credit shown');
+  ok(await page.waitForFunction(() => { const i = document.querySelector('.hero-velvet .photo img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 8000 }).then(() => true).catch(() => false), 'velvet hero photo loaded');
+  await page.locator('.anatomy').first().scrollIntoViewIfNeeded();
+  ok(await page.locator('.anatomy img').first().isVisible(), 'home shows the anatomical illustration');
+  ok(await page.evaluate(() => { const i = document.querySelector('.anatomy img'); return i.complete && i.naturalWidth > 0; }), 'anatomy image loaded');
+  ok((await page.locator('.anatomy-layout + figcaption').first().textContent()).includes('Mariana Ruiz'), 'anatomy credit shown');
   ok(await page.locator('text=עכשיו, לפי המסורת').isVisible(), 'home shows the live now card');
   const centre = await page.locator('.now-grid svg text').allTextContents();
   ok(centre.some((t) => ['ואטה', 'פיטה', 'קאפה'].includes(t.trim())), 'dosha clock names the current dosha');
-  await page.locator('.hero .seat.d-pitta').click();
-  ok((await page.locator('.hero .seat.d-pitta').getAttribute('aria-pressed')) === 'true', 'body map seat selects pitta');
+  await page.locator('.seat.d-pitta').first().click();
+  ok((await page.locator('.seat.d-pitta').first().getAttribute('aria-pressed')) === 'true', 'body map seat selects pitta');
 
   await page.goto(`${BASE}/#/journey`);
   ok(await page.locator('.chapter').count() === 10, 'journey has ten chapters');
