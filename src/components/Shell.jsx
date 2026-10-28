@@ -18,16 +18,13 @@ const NAV = [
 ];
 
 export function StonesMark({ className = 'brand-stones' }) {
+  // קערת פליז במבט מלמעלה, עם נקודת אור אחת
   return (
     <svg className={className} viewBox="0 0 64 64" aria-hidden="true">
-      <defs>
-        <linearGradient id="sm1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#F3C06A" /><stop offset="1" stopColor="#E8A33D" /></linearGradient>
-        <linearGradient id="sm2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#F6A877" /><stop offset="1" stopColor="#F08A4B" /></linearGradient>
-        <linearGradient id="sm3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#4FB0C0" /><stop offset="1" stopColor="#1F8A9E" /></linearGradient>
-      </defs>
-      <ellipse cx="32" cy="15" rx="11" ry="8" fill="url(#sm1)" />
-      <ellipse cx="32" cy="31" rx="16" ry="9" fill="url(#sm2)" />
-      <ellipse cx="32" cy="50" rx="22" ry="11" fill="url(#sm3)" />
+      <circle cx="32" cy="32" r="29" fill="none" stroke="var(--brass)" strokeWidth="2" />
+      <circle cx="32" cy="32" r="21" fill="none" stroke="var(--brass)" strokeWidth="1" opacity=".6" />
+      <circle cx="32" cy="32" r="13" fill="none" stroke="var(--brass)" strokeWidth="1" opacity=".35" />
+      <circle cx="44" cy="20" r="4" fill="var(--ember)" />
     </svg>
   );
 }

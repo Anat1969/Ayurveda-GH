@@ -1,71 +1,94 @@
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { DOSHA_COLOR } from '../data/viz.js';
 
-// מושבי הדושות בגוף לפי המסורת: קאפה בחזה ובקיבה, פיטה במעי הדק, ואטה במעי הגס.
+// שתי שכבות שלא מתערבבות:
+// 1. האיור: אנטומיה של מערכת העיכול (עובדה), איור רפואי בנחלת הכלל.
+// 2. הסימון: מושבי הדושות העיקריים לפי המסורת (צ'ראקה ואשטאנגה הרידאיה). פרשנות על גבי האנטומיה.
+// הקואורדינטות בשטח האיור המקורי. התצוגה חתוכה ל-viewBox 120 40 420 852, בלי השוליים הריקים.
 const ZONES = [
-  { d: 'kapha', name: 'קאפה', seat: 'חזה וקיבה', role: 'מבנה, סיכה וחוסן', cx: 150, cy: 168, rx: 46, ry: 30, lx: 270 },
-  { d: 'pitta', name: 'פיטה', seat: 'מעי דק', role: 'עיכול, חום והמרה', cx: 150, cy: 232, rx: 36, ry: 24, lx: 270 },
-  { d: 'vata', name: 'ואטה', seat: 'מעי גס ואגן', role: 'תנועה, נשימה והפרשה', cx: 150, cy: 290, rx: 42, ry: 24, lx: 270 },
+  {
+    d: 'kapha', n: 1, name: 'קאפה', seat: 'חזה וקיבה', sk: 'Uras, Amashaya', role: 'מבנה, סיכה וחוסן',
+    shapes: [{ cx: 332, cy: 400, rx: 70, ry: 44 }, { cx: 396, cy: 536, rx: 58, ry: 42 }], mark: [396, 536],
+  },
+  {
+    d: 'pitta', n: 2, name: 'פיטה', seat: 'מעי דק', sk: 'Grahani', role: 'עיכול, חום והמרה',
+    shapes: [{ cx: 356, cy: 712, rx: 96, ry: 74 }], mark: [356, 712],
+  },
+  {
+    d: 'vata', n: 3, name: 'ואטה', seat: 'מעי גס ואגן', sk: 'Pakvashaya', role: 'תנועה, נשימה והפרשה',
+    shapes: [{ cx: 440, cy: 700, rx: 34, ry: 92 }, { cx: 338, cy: 818, rx: 62, ry: 42 }], mark: [338, 818],
+  },
 ];
 
-export default function BodyMap({ highlight = null }) {
+export default function BodyMap({ highlight = null, hero = false }) {
   const reduce = useReducedMotion();
   const [hover, setHover] = useState(null);
-  const active = hover || highlight;
+  const [pinned, setPinned] = useState(null);
+  const active = hover || pinned || highlight;
+  const shown = ZONES.find((z) => z.d === active);
 
   return (
-    <figure className="viz">
-      <svg viewBox="0 0 420 470" role="img" aria-label="מפת הגוף: קאפה בחזה, פיטה במעי הדק, ואטה במעי הגס">
-        <defs>
-          <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#FFF8EE" stopOpacity=".95" />
-            <stop offset="1" stopColor="#EED9BF" stopOpacity=".85" />
-          </linearGradient>
-          {ZONES.map((z) => (
-            <radialGradient key={z.d} id={`zone-${z.d}`}>
-              <stop offset="0" stopColor={DOSHA_COLOR[z.d]} stopOpacity=".95" />
-              <stop offset=".6" stopColor={DOSHA_COLOR[z.d]} stopOpacity=".55" />
-              <stop offset="1" stopColor={DOSHA_COLOR[z.d]} stopOpacity="0" />
-            </radialGradient>
-          ))}
-        </defs>
-        <g className="body-shape">
-          <circle cx="150" cy="62" r="34" fill="url(#body)" />
-          <path
-            d="M150 100 C 104 100 86 120 84 150 L 70 270 C 66 300 72 330 92 344 L 104 440 C 106 456 128 456 130 440 L 142 352 L 158 352 L 170 440 C 172 456 194 456 196 440 L 208 344 C 228 330 234 300 230 270 L 216 150 C 214 120 196 100 150 100 Z"
-            fill="url(#body)"
-          />
-          <path d="M86 150 C 60 190 52 240 56 290" stroke="url(#body)" strokeWidth="22" strokeLinecap="round" fill="none" />
-          <path d="M214 150 C 240 190 248 240 244 290" stroke="url(#body)" strokeWidth="22" strokeLinecap="round" fill="none" />
-        </g>
+    <figure className={`viz ${hero ? 'anatomy-hero' : ''}`}>
+      <div className="anatomy-layout">
+        <div className="anatomy">
+          <img src="/anatomy/digestive.svg" alt="איור אנטומי של מערכת העיכול: ושט, קיבה, כבד, מעי דק ומעי גס" width="420" height="852" />
+          <svg className="overlay" viewBox="120 40 420 852" aria-hidden="true">
+            <defs>
+              {ZONES.map((z) => (
+                <radialGradient key={z.d} id={`seat-${z.d}`}>
+                  <stop offset="0" stopColor={`var(--${z.d}-tint, var(--${z.d}))`} stopOpacity=".55" />
+                  <stop offset="1" stopColor={`var(--${z.d}-tint, var(--${z.d}))`} stopOpacity="0" />
+                </radialGradient>
+              ))}
+            </defs>
+            {ZONES.map((z, i) => {
+              const on = !active || active === z.d;
+              return (
+                <g key={z.d} opacity={on ? 1 : 0.15} style={{ transition: 'opacity .5s cubic-bezier(.22,1,.36,1)' }}>
+                  {z.shapes.map((s, k) => (
+                    <g key={k}>
+                      <ellipse cx={s.cx} cy={s.cy} rx={s.rx * 1.25} ry={s.ry * 1.25} fill={`url(#seat-${z.d})`} />
+                      <motion.ellipse
+                        cx={s.cx} cy={s.cy} rx={s.rx} ry={s.ry} fill="none" stroke={`var(--${z.d})`} strokeWidth="2" strokeDasharray="4 6"
+                        initial={reduce ? false : { pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }}
+                        transition={{ duration: 1.4, delay: 0.3 + i * 0.35, ease: [0.22, 1, 0.36, 1] }}
+                      />
+                    </g>
+                  ))}
+                  <circle cx={z.mark[0]} cy={z.mark[1]} r="15" fill="var(--raised)" stroke={`var(--${z.d})`} strokeWidth="2" />
+                  <text x={z.mark[0]} y={z.mark[1] + 6} textAnchor="middle" fontSize="17" fontFamily="IBM Plex Mono, monospace" fill={`var(--${z.d})`}>{z.n}</text>
+                </g>
+              );
+            })}
+            {shown && !reduce && (
+              <circle className="breathe" cx={shown.mark[0]} cy={shown.mark[1]} r="22" fill="none" stroke="var(--ember)" strokeWidth="1.5" />
+            )}
+          </svg>
+        </div>
 
-        {ZONES.map((z, i) => {
-          const on = !active || active === z.d;
-          return (
-            <g key={z.d} onMouseEnter={() => setHover(z.d)} onMouseLeave={() => setHover(null)} style={{ cursor: 'pointer' }}>
-              <motion.ellipse
-                cx={z.cx} cy={z.cy} rx={z.rx} ry={z.ry} fill={`url(#zone-${z.d})`}
-                animate={reduce ? { opacity: on ? 1 : 0.2 } : { opacity: on ? [0.75, 1, 0.75] : 0.2, scale: on ? [1, 1.08, 1] : 1 }}
-                transition={{ duration: 2.6, repeat: reduce ? 0 : Infinity, delay: i * 0.5 }}
-                style={{ originX: `${z.cx}px`, originY: `${z.cy}px` }}
-              />
-              <motion.line
-                x1={z.cx + z.rx * 0.6} y1={z.cy} x2={z.lx - 6} y2={z.cy} stroke={DOSHA_COLOR[z.d]} strokeWidth="1.5" strokeDasharray="3 4"
-                initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ delay: 0.4 + i * 0.25 }}
-                opacity={on ? 1 : 0.25}
-              />
-              <motion.g initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: on ? 1 : 0.3, x: 0 }} animate={{ opacity: on ? 1 : 0.3 }} viewport={{ once: true }} transition={{ delay: 0.6 + i * 0.25 }}>
-                <text x={z.lx + 72} y={z.cy - 6} textAnchor="middle" fontSize="19" fontWeight="600" fill={DOSHA_COLOR[z.d]}>{z.name}</text>
-                <text x={z.lx + 72} y={z.cy + 14} textAnchor="middle" fontSize="13.5" className="svg-ink">{z.seat}</text>
-                <text x={z.lx + 72} y={z.cy + 32} textAnchor="middle" fontSize="12" className="svg-muted">{z.role}</text>
-              </motion.g>
-            </g>
-          );
-        })}
-      </svg>
+        <ol className="seat-list" aria-label="מושבי הדושות">
+          {ZONES.map((z) => (
+            <li key={z.d}>
+              <button
+                type="button" className={`seat d-${z.d}`} aria-pressed={pinned === z.d}
+                onMouseEnter={() => setHover(z.d)} onMouseLeave={() => setHover(null)} onFocus={() => setHover(z.d)} onBlur={() => setHover(null)}
+                onClick={() => setPinned(pinned === z.d ? null : z.d)}
+              >
+                <span className="mono seat-n">{z.n}</span>
+                <span>
+                  <span className="dosha-name seat-name">{z.name}</span>
+                  <span className="seat-place">{z.seat}</span>
+                  <span className="mono seat-sk">{z.sk}</span>
+                  <span className="seat-role">{z.role}</span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      </div>
       <figcaption>
-        <span className="claim tradition">מסורת</span> לכל דושה יש מושב עיקרי בגוף, ומשם היא פועלת בכל הגוף. <span className="claim assessment">הערכה</span> זו מפה מושגית, לא אנטומיה.
+        <span className="claim research">עובדה מחקרית</span> האיור הוא אנטומיה. <span className="claim tradition">מסורת</span> הסימון הוא מושבי הדושות העיקריים לפי צ׳ראקה ואשטאנגה הרידאיה. מכל מושב, לפי המסורת, הדושה פועלת בכל הגוף.
+        <span className="credit" style={{ display: 'block', marginTop: 5 }}>איור: Mariana Ruiz (LadyofHats), נחלת הכלל, Wikimedia Commons</span>
       </figcaption>
     </figure>
   );

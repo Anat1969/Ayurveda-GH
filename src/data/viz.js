@@ -1,17 +1,15 @@
 // נתונים להמחשות. כל שיוך כאן מסומן במקורו: מסורת או הערכה.
 
-export const DOSHA_COLOR = {
-  vata: '#1F8A9E',
-  pitta: '#C9502F',
-  kapha: '#2E9E7A',
-};
+// צבעי הדושות כמשתני CSS, כך שהם מתחלפים בין מצב בהיר לכהה.
+export const DOSHA_COLOR = { vata: 'var(--vata)', pitta: 'var(--pitta)', kapha: 'var(--kapha)' };
+export const DOSHA_TINT = { vata: 'var(--vata-tint, var(--vata))', pitta: 'var(--pitta-tint, var(--pitta))', kapha: 'var(--kapha-tint, var(--kapha))' };
 
 export const ELEMENTS = [
-  { id: 'space', name: 'חלל', sk: 'Akasha', color: '#6E7FB8', doshas: ['vata'] },
-  { id: 'air', name: 'אוויר', sk: 'Vayu', color: '#7FC3CF', doshas: ['vata'] },
-  { id: 'fire', name: 'אש', sk: 'Tejas', color: '#E9733F', doshas: ['pitta'] },
-  { id: 'water', name: 'מים', sk: 'Ap', color: '#3B88B5', doshas: ['pitta', 'kapha'] },
-  { id: 'earth', name: 'אדמה', sk: 'Prithvi', color: '#8A6A44', doshas: ['kapha'] },
+  { id: 'space', name: 'חלל', sk: 'Akasha', color: '#5E6E86', doshas: ['vata'] },
+  { id: 'air', name: 'אוויר', sk: 'Vayu', color: '#7FA8B0', doshas: ['vata'] },
+  { id: 'fire', name: 'אש', sk: 'Tejas', color: '#C2622E', doshas: ['pitta'] },
+  { id: 'water', name: 'מים', sk: 'Ap', color: '#3C7389', doshas: ['pitta', 'kapha'] },
+  { id: 'earth', name: 'אדמה', sk: 'Prithvi', color: '#7A5B3A', doshas: ['kapha'] },
 ];
 
 // עשרה זוגות איכויות (Gurvadi Guna)
@@ -125,9 +123,9 @@ export const CONCEPT_LINKS = [
 ];
 
 export const GROUP_COLOR = {
-  foundations: '#E8A33D',
-  doshas: '#C9502F',
-  person: '#1F8A9E',
-  routine: '#2E9E7A',
-  sources: '#1B4F8A',
+  foundations: 'var(--brass)',
+  doshas: 'var(--pitta)',
+  person: 'var(--vata)',
+  routine: 'var(--kapha)',
+  sources: 'var(--muted)',
 };

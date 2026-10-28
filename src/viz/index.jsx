@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import HeroScene from './HeroScene.jsx';
 import ElementsFlow from './ElementsFlow.jsx';
 import DoshaClock from './DoshaClock.jsx';
 import { SeasonWheel, LifeStages } from './Cycles.jsx';
@@ -11,7 +10,7 @@ import GunaLab from './GunaLab.jsx';
 import ConceptGraph from './ConceptGraph.jsx';
 import { ClaimMeter, SafetyFlow } from './Evidence.jsx';
 
-export { HeroScene, ElementsFlow, DoshaClock, SeasonWheel, LifeStages, BodyMap, DhatuCascade, AgniFlames, Ternary, GunaLab, ConceptGraph, ClaimMeter, SafetyFlow };
+export { ElementsFlow, DoshaClock, SeasonWheel, LifeStages, BodyMap, DhatuCascade, AgniFlames, Ternary, GunaLab, ConceptGraph, ClaimMeter, SafetyFlow };
 
 // מפת שבעת סוגי החוקה
 export function PrakritiMap() {
@@ -46,8 +45,8 @@ export function VikritiDemo() {
     <figure className="viz">
       <Ternary
         points={[
-          { pct: BASE, color: '#1E2430', label: 'חוקה', r: 9 },
-          { pct: DRIFT[i], color: '#E8A33D', label: 'איזון נוכחי', pulse: true, below: true },
+          { pct: BASE, color: 'var(--ink)', label: 'חוקה', r: 9 },
+          { pct: DRIFT[i], color: 'var(--ember)', label: 'איזון נוכחי', pulse: true, below: true },
         ]}
         label="האיזון הנוכחי זז סביב החוקה"
       />

@@ -39,7 +39,7 @@ export function PrakritiResult({ result, previous, history = [] }) {
       <div className="grid two">
         <div className="stone viz-stone">
           <Ternary
-            points={[{ pct: result.pct, color: '#1E2430', label: 'החוקה שלי', pulse: true }]}
+            points={[{ pct: result.pct, color: 'var(--ink)', label: 'החוקה שלי', pulse: true }]}
             trail={history.map((h) => h.pct)}
             label="החוקה שלי במשולש הדושות"
           />
@@ -181,7 +181,7 @@ export default function Prakriti() {
     </div>
     <aside className="stone viz-stone live-panel" aria-label="התוצאה מתעדכנת">
       <div className="eyebrow">בזמן אמת</div>
-      <Ternary points={[{ pct: live.pct, color: '#1E2430', label: live.answered ? 'הנקודה שלי' : 'עוד לא ענית', pulse: true }]} label="הנקודה שלי במשולש" />
+      <Ternary points={[{ pct: live.pct, color: 'var(--ink)', label: live.answered ? 'הנקודה שלי' : 'עוד לא ענית', pulse: true }]} label="הנקודה שלי במשולש" />
       <p className="small muted" style={{ margin: 0 }}>כל תשובה מזיזה את הנקודה לעבר דושה אחת. אחרי {live.answered} תשובות.</p>
     </aside>
     </div>
