@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { loadResults, deleteResult, clearResults } from '../lib/storage.js';
 import { prakritiDrift, CONFIDENCE_TEXT, DRIFT_TEXT } from '../lib/scoring.js';
 import { DoshaBars, doshaList, formatDate } from '../components/Shell.jsx';
+import { Ternary } from '../viz/index.jsx';
 
 function useResults() {
   const read = () => ({ prakriti: loadResults('prakriti'), vikriti: loadResults('vikriti') });
@@ -38,6 +39,22 @@ export default function Results() {
             <a className="btn warm" href="#/prakriti">לשאלון החוקה</a>
             <a className="btn ghost" href="#/vikriti">לשאלון האיזון הנוכחי</a>
           </div>
+        </div>
+      )}
+
+      {!empty && (
+        <div className="stone viz-stone">
+          <div className="eyebrow">כל המדידות במשולש אחד</div>
+          <Ternary
+            points={[
+              ...(prakriti[0] ? [{ pct: prakriti[0].pct, color: '#1E2430', label: 'חוקה' }] : []),
+              ...(vikriti[0] ? [{ pct: vikriti[0].pct, color: '#E8A33D', label: 'איזון אחרון', pulse: true, below: true }] : []),
+            ]}
+            trail={[...vikriti].reverse().map((v) => v.pct)}
+            arrow={prakriti[0] && vikriti[0] && !vikriti[0].calm ? [prakriti[0].pct, vikriti[0].pct] : null}
+            label="החוקה ומסלול האיזון לאורך זמן"
+          />
+          <p className="small muted" style={{ margin: 0 }}>הנקודות האפורות הן מדידות איזון קודמות, לפי הסדר. כך רואים מגמה ולא רק תמונת מצב.</p>
         </div>
       )}
 

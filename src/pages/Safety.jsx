@@ -1,5 +1,6 @@
 import { WARNING_SIGNS } from '../data/vikriti.js';
 import { Claim } from '../components/Shell.jsx';
+import { SafetyFlow, ClaimMeter } from '../viz/index.jsx';
 
 const LIMITS = [
   'אין איבחון מחלות. "איבחון" כאן פירושו תיאור של החוקה ושל האיזון הנוכחי כדפוס בלבד.',
@@ -27,6 +28,11 @@ export default function Safety() {
         </p>
       </div>
 
+      <div className="stone viz-stone">
+        <h2>איך היועצת בודקת כל הודעה</h2>
+        <SafetyFlow />
+      </div>
+
       <div className="stone">
         <h2>גבולות</h2>
         <ul className="list-plain">
@@ -39,7 +45,8 @@ export default function Safety() {
         <p><Claim type="tradition" /> מה שכתוב בטקסטים הקלאסיים. זה תיאור של שיטה, לא הוכחה.</p>
         <p><Claim type="assessment" /> פרשנות: התאמה לישראל, ספים שנקבעו לאפליקציה, או ביקורת על טענה.</p>
         <p><Claim type="research" /> נבדק במחקר. מצוין גם כשהמחקר מוקדם או קטן.</p>
-        <p style={{ marginBottom: 0 }}><Claim type="none" /> לא נמצא מחקר שבדק את הטענה.</p>
+        <p><Claim type="none" /> לא נמצא מחקר שבדק את הטענה.</p>
+        <ClaimMeter />
       </div>
 
       <div className="stone">

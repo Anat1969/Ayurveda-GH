@@ -7,6 +7,8 @@ import { clearResults } from '../lib/storage.js';
 export const DEV_CHAT = 'https://claude.ai/code/session_018qeN17QgigYE2JRu1PLrNE';
 
 const NAV = [
+  { page: 'journey', label: 'המסע' },
+  { page: 'maps', label: 'מפות' },
   { page: 'library', label: 'ספרייה' },
   { page: 'prakriti', label: 'חוקה' },
   { page: 'vikriti', label: 'איזון נוכחי' },

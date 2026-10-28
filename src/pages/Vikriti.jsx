@@ -5,6 +5,7 @@ import { RECOMMENDATIONS, DOSHA } from '../data/recommendations.js';
 import { scoreVikriti } from '../lib/scoring.js';
 import { latestResult, saveResult } from '../lib/storage.js';
 import { DoshaBars, doshaList, Claim } from '../components/Shell.jsx';
+import { Ternary, VikritiDemo } from '../viz/index.jsx';
 
 export function DoctorAlert() {
   return (
@@ -75,6 +76,21 @@ export function VikritiResult({ result, prakriti }) {
   const matchesPrakriti = prakriti && !result.calm && prakriti.type.includes(result.elevated[0] || result.top);
   return (
     <div className="stack">
+      <div className="grid two">
+      <div className="stone viz-stone">
+        <Ternary
+          points={[
+            ...(prakriti ? [{ pct: prakriti.pct, color: '#1E2430', label: 'חוקה', r: 9 }] : []),
+            { pct: result.pct, color: '#E8A33D', label: 'עכשיו', pulse: true, below: true },
+          ]}
+          arrow={prakriti && !result.calm ? [prakriti.pct, result.pct] : null}
+          label="האיזון הנוכחי ביחס לחוקה"
+        />
+        <p className="small muted" style={{ margin: 0 }}>
+          {prakriti ? 'החץ מראה לאן האיזון זז ביחס לחוקה שלך.' : 'מלאו את שאלון החוקה כדי לראות את החץ מהחוקה אל המצב הנוכחי.'}{' '}
+          <Claim type="assessment" /> המיקום מחושב מהיחס בין עוצמות הסימנים.
+        </p>
+      </div>
       <div className="stone">
         <div className="eyebrow">הדפוס בשבועיים האחרונים</div>
         <h2>
@@ -87,6 +103,7 @@ export function VikritiResult({ result, prakriti }) {
           האחוז הוא עוצמת הסימנים מתוך המקסימום האפשרי לכל דושה. מעל 40 אחוז נחשב כאן לעלייה. זה סף שנקבע לאפליקציה,
           לא נתון מהמסורת.
         </p>
+      </div>
       </div>
       {prakriti && !result.calm && (
         <div className="note">
@@ -150,6 +167,7 @@ export default function Vikriti() {
             <button className="btn ghost" onClick={() => setStage('items')}>הבנתי, ואפנה לרופא. להמשיך לשאלון</button>
           )}
         </div>
+        <div className="stone viz-stone"><VikritiDemo /></div>
         <VikritiMethod />
       </div>
     );
