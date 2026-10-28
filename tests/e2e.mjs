@@ -52,13 +52,14 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   ok(await page.locator('ai-menu .logo').isVisible(), 'A&I logo button in the top bar');
   ok(!(await page.locator('header >> text=העתקת קישור').first().isVisible().catch(() => false)), 'no loose development buttons in the bar');
   ok((await page.locator('ai-menu').getAttribute('chat'))?.startsWith('https://claude.ai/code/'), 'ai-menu has the development chat link');
+  ok((await page.locator('ai-menu').getAttribute('research'))?.startsWith('https://claude.ai/chat/'), 'ai-menu has the research project link');
   await page.waitForTimeout(1500);
   await page.screenshot({ path: `${SHOTS}/home-desktop.png`, fullPage: true });
 
   // תפריט הלוגו נפתח ומכיל את פעולת המחיקה
   await page.locator('ai-menu .logo').click();
   const menuText = await page.locator('ai-menu').evaluate((el) => el.shadowRoot?.textContent || '');
-  ok(menuText.includes('העתקת קישור') && menuText.includes('מחיקת כל התוצאות'), 'logo menu holds copy link and the app delete action');
+  ok(menuText.includes('העתקת קישור') && menuText.includes('פרויקט המחקר') && menuText.includes('מחיקת כל התוצאות'), 'logo menu holds copy link and the app delete action');
   await page.keyboard.press('Escape');
   await page.goto(`${BASE}/#/`);
 
