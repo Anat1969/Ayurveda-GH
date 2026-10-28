@@ -1,0 +1,282 @@
+/* שפה עיצובית: docs/design-language.md. זכוכית טבעית, אבנים מעוגלות, אור שקיעה. */
+:root {
+  --sunset-amber: #E8A33D;
+  --sunset-orange: #F08A4B;
+  --ruby: #A8282E;
+  --emerald: #2E9E7A;
+  --teal: #1F8A9E;
+  --deep-sea: #1B4F8A;
+  --sand: #F3E9DC;
+  --night: #1E2430;
+  --radius-stone: 28px;
+  --gloss: linear-gradient(160deg, rgba(255,255,255,.35), rgba(255,255,255,0) 60%);
+
+  /* גוונים כהים לטקסט, בניגודיות 4.5:1 ומעלה על רקע החול */
+  --vata-ink: #13606E;
+  --pitta-ink: #8E2026;
+  --kapha-ink: #1C6A51;
+  --amber-ink: #7A4E0E;
+
+  --bg: var(--sand);
+  --bg-deep: #EADCC9;
+  --text: var(--night);
+  --muted: #5B5248;
+  --line: rgba(30, 36, 48, .12);
+  --glass: rgba(255, 252, 247, .62);
+  --glass-strong: rgba(255, 252, 247, .86);
+  --shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 10px 30px -14px rgba(122, 64, 20, .38), 0 2px 6px rgba(122, 64, 20, .08);
+  --shadow-lift: 0 1px 0 rgba(255,255,255,.7) inset, 0 22px 44px -18px rgba(122, 64, 20, .45), 0 4px 10px rgba(122, 64, 20, .1);
+  --link: var(--deep-sea);
+  --glow: radial-gradient(1200px 520px at 85% -10%, rgba(240,138,75,.28), transparent 60%),
+          radial-gradient(900px 600px at 0% 0%, rgba(232,163,61,.22), transparent 55%),
+          radial-gradient(1000px 700px at 50% 110%, rgba(31,138,158,.14), transparent 60%);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: var(--night);
+    --bg-deep: #161B24;
+    --text: var(--sand);
+    --muted: #C3B6A6;
+    --line: rgba(243, 233, 220, .14);
+    --glass: rgba(43, 50, 64, .62);
+    --glass-strong: rgba(43, 50, 64, .9);
+    --shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 12px 32px -14px rgba(0,0,0,.6);
+    --shadow-lift: 0 1px 0 rgba(255,255,255,.08) inset, 0 24px 48px -18px rgba(0,0,0,.7);
+    --vata-ink: #6CC7D6;
+    --pitta-ink: #F2A08F;
+    --kapha-ink: #7FD3B4;
+    --amber-ink: #F0C27A;
+    --link: #8DB8EE;
+    --gloss: linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,0) 60%);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: var(--night);
+  --bg-deep: #161B24;
+  --text: var(--sand);
+  --muted: #C3B6A6;
+  --line: rgba(243, 233, 220, .14);
+  --glass: rgba(43, 50, 64, .62);
+  --glass-strong: rgba(43, 50, 64, .9);
+  --shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 12px 32px -14px rgba(0,0,0,.6);
+  --shadow-lift: 0 1px 0 rgba(255,255,255,.08) inset, 0 24px 48px -18px rgba(0,0,0,.7);
+  --vata-ink: #6CC7D6;
+  --pitta-ink: #F2A08F;
+  --kapha-ink: #7FD3B4;
+  --amber-ink: #F0C27A;
+  --link: #8DB8EE;
+  --gloss: linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,0) 60%);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  background-image: var(--glow);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: 'IBM Plex Sans Hebrew', system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+a { color: var(--link); }
+button, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--deep-sea); outline-offset: 3px; border-radius: 8px; }
+.mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: .06em; }
+
+/* מבנה */
+.app { min-height: 100vh; display: grid; grid-template-rows: auto 1fr auto; grid-template-columns: minmax(0, 1fr); }
+.wrap { width: 100%; max-width: 980px; margin: 0 auto; padding: 0 16px; }
+main { padding: 28px 0 64px; min-width: 0; }
+
+/* סרגל עליון */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--glass-strong);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border-bottom: 1px solid var(--line);
+}
+.topbar-inner { display: flex; align-items: center; gap: 16px; min-height: 64px; min-width: 0; }
+.brand {
+  display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text);
+  font-weight: 600; font-size: 18px; white-space: nowrap; flex: 0 0 auto;
+}
+.brand-stones { width: 28px; height: 28px; flex: 0 0 auto; }
+.nav { display: flex; gap: 4px; min-width: 0; flex: 1 1 auto; overflow-x: auto; scrollbar-width: none; }
+.nav::-webkit-scrollbar { display: none; }
+.nav a {
+  flex: 0 0 auto; padding: 8px 14px; border-radius: 999px; text-decoration: none; color: var(--text);
+  font-size: 15.5px; transition: background .2s;
+}
+.nav a:hover { background: rgba(232,163,61,.16); }
+.nav a[aria-current="page"] { background: var(--text); color: var(--bg); }
+.topbar ai-menu { flex: 0 0 auto; }
+
+@media (max-width: 720px) {
+  .topbar-inner { flex-wrap: wrap; gap: 6px 10px; padding: 8px 16px; }
+  .brand { order: 1; flex: 1 1 auto; }
+  .topbar ai-menu { order: 2; }
+  .nav { order: 3; flex: 1 1 100%; padding: 0 0 4px; }
+}
+
+/* כותרות */
+h1, h2, h3 { line-height: 1.2; margin: 0 0 .5em; }
+h1 { font-size: clamp(34px, 6vw, 58px); font-weight: 300; letter-spacing: -.01em; }
+h2 { font-size: clamp(24px, 3.4vw, 32px); font-weight: 400; }
+h3 { font-size: 20px; font-weight: 500; }
+.eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; letter-spacing: .18em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+.lead { font-size: 19px; color: var(--muted); max-width: 640px; }
+
+/* אבן: הכרטיס הבסיסי */
+.stone {
+  position: relative; border-radius: var(--radius-stone);
+  background: var(--glass); border: 1px solid var(--line);
+  box-shadow: var(--shadow); padding: 24px;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  overflow: hidden; min-width: 0;
+}
+.stone::before { content: ''; position: absolute; inset: 0; background: var(--gloss); pointer-events: none; border-radius: inherit; }
+.stone > * { position: relative; }
+a.stone { display: block; text-decoration: none; color: inherit; transition: box-shadow .3s, transform .3s; }
+a.stone:hover { box-shadow: var(--shadow-lift); }
+
+.grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 720px) { .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); } .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.stack { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+.section { margin-top: 48px; }
+
+/* כפתורים: אבן חלקה */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 10px 26px; border-radius: 999px; border: 1px solid transparent;
+  background: linear-gradient(170deg, #2A3242, var(--night)); color: var(--sand);
+  font-weight: 500; text-decoration: none; cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255,255,255,.14) inset, 0 10px 22px -12px rgba(30,36,48,.7);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.btn.warm { background: linear-gradient(170deg, var(--sunset-amber), var(--sunset-orange)); color: #2A1A08; }
+.btn.ghost { background: transparent; color: var(--text); border-color: var(--line); box-shadow: none; }
+.btn.danger { background: transparent; color: var(--ruby); border-color: rgba(168,40,46,.35); box-shadow: none; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; min-width: 0; }
+.row > * { flex: 0 0 auto; }
+
+/* סימון סוג הטענה */
+.claim {
+  display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: .08em;
+  padding: 2px 10px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; vertical-align: 2px;
+}
+.claim.tradition { color: var(--amber-ink); }
+.claim.assessment { color: var(--vata-ink); }
+.claim.research { color: var(--kapha-ink); }
+.claim.none { color: var(--muted); }
+.claim-line { margin: 0 0 16px; }
+.claim-line .claim { margin-inline-end: 10px; }
+
+/* צבעי הדושות */
+.d-vata { --d: var(--teal); --d-ink: var(--vata-ink); }
+.d-pitta { --d: linear-gradient(160deg, var(--sunset-amber), var(--ruby)); --d-ink: var(--pitta-ink); }
+.d-kapha { --d: var(--emerald); --d-ink: var(--kapha-ink); }
+.dosha-name { color: var(--d-ink); font-weight: 600; }
+.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--d); vertical-align: 0; margin-inline-end: 8px; }
+
+/* מגדל האבנים בדף הבית */
+.hero { display: grid; gap: 32px; grid-template-columns: minmax(0, 1fr); align-items: center; }
+@media (min-width: 860px) { .hero { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); } }
+.tower { display: grid; gap: 12px; justify-items: center; grid-template-columns: minmax(0, 1fr); }
+.tower a { width: 100%; text-decoration: none; color: inherit; }
+.tower-stone {
+  position: relative; border-radius: 999px; padding: 18px 28px; min-height: 84px;
+  display: grid; align-content: center; gap: 2px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,.35);
+  box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 -10px 24px -12px rgba(0,0,0,.25) inset, 0 16px 30px -16px rgba(122,64,20,.55);
+  color: #1A1410;
+}
+.tower-stone::before { content: ''; position: absolute; inset: 0; background: linear-gradient(170deg, rgba(255,255,255,.55), rgba(255,255,255,0) 50%); }
+.tower-stone::after { content: ''; position: absolute; inset: auto 10% -40% 10%; height: 60%; background: radial-gradient(closest-side, rgba(255,240,210,.55), transparent); filter: blur(6px); }
+.tower-stone > * { position: relative; z-index: 1; }
+.tower-stone b { font-size: 20px; font-weight: 600; }
+.tower-stone span { font-size: 15px; opacity: .86; }
+.ts-1 { background: linear-gradient(160deg, #F3C06A, var(--sunset-amber)); width: 74%; }
+.ts-2 { background: linear-gradient(160deg, #F6A877, var(--sunset-orange)); width: 86%; }
+.ts-3 { background: linear-gradient(160deg, #4FB0C0, var(--teal)); width: 94%; color: #06222A; }
+.ts-4 { background: linear-gradient(160deg, #3C72B0, var(--deep-sea)); width: 100%; color: var(--sand); }
+.ts-4 span { opacity: .92; }
+@media (max-width: 520px) { .ts-1, .ts-2, .ts-3, .ts-4 { width: 100%; } }
+
+/* שאלון */
+.progress { height: 10px; border-radius: 999px; background: var(--bg-deep); overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,.08) inset; }
+.progress > i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--teal), var(--sunset-amber)); transition: width .4s; }
+.options { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); margin: 20px 0; }
+.option {
+  text-align: right; padding: 16px 20px; border-radius: 22px; border: 1px solid var(--line);
+  background: var(--glass-strong); cursor: pointer; transition: border-color .2s, box-shadow .2s, transform .2s;
+  min-height: 56px;
+}
+.option:hover { border-color: rgba(232,163,61,.7); }
+.option[aria-pressed="true"] { border-color: var(--sunset-amber); box-shadow: 0 0 0 3px rgba(232,163,61,.28); }
+.scale { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+.scale button {
+  min-height: 44px; border-radius: 14px; border: 1px solid var(--line); background: var(--glass-strong);
+  font-size: 14.5px; cursor: pointer; padding: 6px 4px;
+}
+.scale button[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+.check { display: flex; gap: 12px; align-items: flex-start; padding: 12px 4px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.check input { width: 22px; height: 22px; margin-top: 3px; accent-color: var(--ruby); flex: 0 0 auto; }
+
+/* תוצאות: עמודות אבן */
+.bars { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+.bar-row { display: grid; grid-template-columns: 70px minmax(0, 1fr) 52px; gap: 12px; align-items: center; }
+.bar { height: 18px; border-radius: 999px; background: var(--bg-deep); overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,.08) inset; }
+.bar > i { display: block; height: 100%; border-radius: inherit; background: var(--d); box-shadow: 0 1px 0 rgba(255,255,255,.45) inset; }
+.meta { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 720px) { .meta { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.meta div { padding: 14px 16px; border-radius: 18px; background: var(--glass-strong); border: 1px solid var(--line); }
+.meta small { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: .12em; color: var(--muted); }
+
+/* התראות */
+.alert { border-radius: 22px; padding: 18px 20px; border: 1px solid rgba(168,40,46,.4); background: rgba(168,40,46,.08); }
+.alert strong { color: var(--ruby); }
+:root[data-theme="dark"] .alert strong { color: #F2A08F; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .alert strong { color: #F2A08F; } }
+.note { border-radius: 22px; padding: 16px 20px; border: 1px dashed var(--line); color: var(--muted); font-size: 15.5px; }
+
+/* שיחה */
+.chat { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 14px; min-height: 60vh; }
+.messages { display: grid; gap: 12px; align-content: start; grid-auto-rows: max-content; }
+.msg { max-width: 88%; padding: 14px 18px; border-radius: 22px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.user { justify-self: start; background: var(--text); color: var(--bg); border-bottom-right-radius: 8px; }
+.msg.assistant { justify-self: end; background: var(--glass-strong); border: 1px solid var(--line); border-bottom-left-radius: 8px; box-shadow: var(--shadow); }
+.msg.safety { justify-self: stretch; max-width: 100%; }
+.msg .links { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+.composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; position: sticky; bottom: 12px; }
+.composer textarea {
+  resize: none; min-height: 52px; max-height: 160px; padding: 13px 18px; border-radius: 26px;
+  border: 1px solid var(--line); background: var(--glass-strong); box-shadow: var(--shadow);
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--glass); cursor: pointer; font-size: 15px; text-align: right; }
+.status { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: .1em; color: var(--muted); }
+
+/* כותרת תחתונה */
+.footer { border-top: 1px solid var(--line); padding: 22px 0 28px; font-size: 14.5px; color: var(--muted); background: var(--glass); }
+.footer .row { justify-content: space-between; }
+.footer .row > span { flex: 1 1 260px; min-width: 0; }
+.footer a { color: inherit; }
+.emergency { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.emergency b { color: var(--text); font-weight: 600; }
+
+.list-plain { margin: 0; padding: 0 22px 0 0; }
+.list-plain li { margin: 6px 0; }
+.muted { color: var(--muted); }
+.small { font-size: 15px; }
+hr.soft { border: 0; border-top: 1px solid var(--line); margin: 24px 0; }
