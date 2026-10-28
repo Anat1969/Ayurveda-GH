@@ -81,8 +81,8 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
 
   // ספרייה: כל מושג נפתח
   await page.goto(`${BASE}/#/library`);
-  const conceptLinks = await page.locator('main a.stone[href^="#/library/"]').evaluateAll((as) => as.map((a) => a.getAttribute('href')));
-  ok(conceptLinks.length >= 15, `library lists ${conceptLinks.length} concepts`);
+  const conceptLinks = await page.locator('main a.concept-link').evaluateAll((as) => as.map((a) => a.getAttribute('href')));
+  ok(conceptLinks.length >= 23, `library lists ${conceptLinks.length} concepts`);
   for (const href of conceptLinks) {
     await page.goto(`${BASE}/${href}`);
     const claims = await page.locator('main .claim').count();
@@ -98,39 +98,57 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
 
   // שכבה חזותית
   await page.goto(`${BASE}/#/`);
-  ok(await page.waitForFunction(() => { const i = document.querySelector('.hero-velvet .photo img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 8000 }).then(() => true).catch(() => false), 'velvet hero photo loaded');
-  await page.locator('.anatomy').first().scrollIntoViewIfNeeded();
-  ok(await page.locator('.anatomy img').first().isVisible(), 'home shows the anatomical illustration');
-  ok(await page.evaluate(() => { const i = document.querySelector('.anatomy img'); return i.complete && i.naturalWidth > 0; }), 'anatomy image loaded');
+  ok(await page.waitForFunction(() => { const i = document.querySelector('.home-photo img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 8000 }).then(() => true).catch(() => false), 'home photo loaded');
+  ok(await page.evaluate(() => getComputedStyle(document.querySelector('.home-photo .photo-fade')).maskImage.includes('gradient')), 'photo fades into the background, no frame');
+  ok(await page.locator('.now-line .dosha-mark').count() === 2, 'home now line shows the hour and season dosha shapes');
+  await page.goto(`${BASE}/#/maps/body`);
+  ok(await page.waitForFunction(() => { const i = document.querySelector('.anatomy img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 8000 }).then(() => true).catch(() => false), 'anatomy image loaded');
   ok((await page.locator('.anatomy-layout + figcaption').first().textContent()).includes('Mariana Ruiz'), 'anatomy credit shown');
-  ok(await page.locator('text=עכשיו, לפי המסורת').isVisible(), 'home shows the live now card');
-  const centre = await page.locator('.now-grid svg text').allTextContents();
-  ok(centre.some((t) => ['ואטה', 'פיטה', 'קאפה'].includes(t.trim())), 'dosha clock names the current dosha');
   await page.locator('.seat.d-pitta').first().click();
   ok((await page.locator('.seat.d-pitta').first().getAttribute('aria-pressed')) === 'true', 'body map seat selects pitta');
+  await page.goto(`${BASE}/#/maps/clock`);
+  const centre = await page.locator('main svg text').allTextContents();
+  ok(centre.some((t) => ['ואטה', 'פיטה', 'קאפה'].includes(t.trim())), 'dosha clock names the current dosha');
 
+  // המסע: פרק אחד בכל מסך, עם דפדוף
   await page.goto(`${BASE}/#/journey`);
-  ok(await page.locator('.chapter').count() === 10, 'journey has ten chapters');
-  for (let i = 0; i < 10; i++) {
-    const ch = page.locator('.chapter').nth(i);
-    await ch.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(150);
-    ok(await ch.locator('.viz').count() >= 1, `journey chapter ${i + 1} has a visual`);
+  const railCount = await page.locator('.rail button').count();
+  ok(railCount === 12, `journey has ${railCount} chapters`);
+  for (let i = 0; i < railCount; i++) {
+    ok(await page.locator('.chapter-viz svg, .chapter-viz .viz').count() >= 1, `journey chapter ${i + 1} has a visual`);
+    if (i < railCount - 1) await page.locator('button', { hasText: 'הפרק הבא' }).click();
   }
-  await page.screenshot({ path: `${SHOTS}/journey-end.png` });
+  ok((await page.evaluate(() => location.hash)) === '#/journey/limits', 'journey next button walks to the last chapter');
+  await page.waitForTimeout(400);
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(300);
+  ok((await page.evaluate(() => location.hash)) === '#/journey/evidence', 'arrow key goes back a chapter');
+  await page.locator('.rail button').nth(2).click();
+  ok((await page.evaluate(() => location.hash)) === '#/journey/tastes', 'chapter rail jumps to a chapter');
 
+  // מפות: בחירה אחת בכל פעם
   await page.goto(`${BASE}/#/maps`);
-  ok(await page.locator('.maps-grid > section').count() === 13, 'maps page has thirteen visuals');
-  for (let i = 0; i < 13; i++) {
-    const sec = page.locator('.maps-grid > section').nth(i);
-    await sec.scrollIntoViewIfNeeded();
-    ok(await sec.locator('.viz, svg').count() >= 1, `map ${i + 1} renders`);
+  const mapCount = await page.locator('.map-list button').count();
+  ok(mapCount === 15, `maps page offers ${mapCount} visuals`);
+  for (let i = 0; i < mapCount; i++) {
+    await page.locator('.map-list button').nth(i).click();
+    ok(await page.locator('.map-stage svg, .map-stage .viz').count() >= 1, `map ${i + 1} renders`);
   }
-  await page.screenshot({ path: `${SHOTS}/maps.png`, fullPage: true });
 
+  // שש הטעמים ומבנה הגוף
+  await page.goto(`${BASE}/#/maps/tastes`);
+  await page.locator('g[role="button"][aria-label^="חריף"]').click({ force: true });
+  const tasteText = await page.locator('.tastes .legend-block').textContent();
+  ok(tasteText.includes('מגביר: ואטה ופיטה') && tasteText.includes('מאזן: קאפה'), 'pungent raises vata and pitta, balances kapha');
+  await page.goto(`${BASE}/#/maps/build`);
+  await page.locator('.seg-btn', { hasText: 'קאפה' }).click();
+  ok((await page.locator('.build .legend-block').textContent()).includes('רחב'), 'kapha build is broad');
+  await page.goto(`${BASE}/#/maps/safety`);
+  ok(await page.locator('.gate-legend li').count() === 4, 'safety gates legend has four steps');
+
+  await page.goto(`${BASE}/#/maps/gunas`);
   // מעבדת האיכויות
   const lab = page.locator('#map-gunas');
-  await lab.scrollIntoViewIfNeeded();
   await lab.locator('.chip', { hasText: 'יום שרב' }).click();
   const gauges = await lab.locator('.gauge').allTextContents();
   ok(gauges[1].includes('מגביר'), `sharav raises pitta (${gauges[1]})`);
@@ -142,10 +160,8 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   await lab.screenshot({ path: `${SHOTS}/guna-lab.png` });
 
   // מפת הידע: מעבר למושג
-  await page.goto(`${BASE}/#/library`);
-  await page.waitForTimeout(700);
-  await page.locator('main .viz-stone').first().scrollIntoViewIfNeeded();
-  await page.waitForTimeout(1200);
+  await page.goto(`${BASE}/#/maps/graph`);
+  await page.waitForTimeout(1800);
   await page.locator('g[role="link"][aria-label="אש העיכול"]').click({ force: true });
   ok((await page.evaluate(() => location.hash)) === '#/library/agni', 'knowledge graph node opens the concept');
   ok(await page.waitForSelector('.concept-viz .viz', { timeout: 5000 }).then(() => true).catch(() => false), 'concept page has its visual');
@@ -184,11 +200,17 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   await page.locator('label.check').first().click();
   ok(!(await page.locator('.alert[role=alert]').isVisible()), 'alert disappears when unchecked');
   await page.locator('button', { hasText: 'אין לי אף אחד' }).click();
-  const submit = page.locator('button', { hasText: /נותרו|לראות/ });
-  ok(await submit.isDisabled(), 'result locked until every item is answered');
-  const groups = page.locator('.scale');
-  const n = await groups.count();
-  for (let i = 0; i < n; i++) await groups.nth(i).locator('button').nth(i >= 5 && i < 10 ? 3 : 1).click();
+  ok(await page.locator('button', { hasText: 'עוד לענות' }).isDisabled(), 'next page locked until the page is answered');
+  for (let pg = 0; pg < 3; pg++) {
+    const items = page.locator('.items .item');
+    const n = await items.count();
+    ok(n === 5, `vikriti page ${pg + 1} shows five items`);
+    for (let i = 0; i < n; i++) {
+      const d = await items.nth(i).getAttribute('data-d');
+      await items.nth(i).locator('.scale button').nth(d === 'pitta' ? 3 : 1).click();
+    }
+    if (pg < 2) await page.locator('button', { hasText: 'לעמוד הבא' }).click();
+  }
   await page.locator('button', { hasText: 'לראות את התוצאה' }).click();
   await page.waitForSelector('text=המלצות לאורח חיים');
   ok(await page.locator('h2', { hasText: 'סימנים של עלייה בפיטה' }).isVisible(), 'vikriti detects elevated pitta');
@@ -198,7 +220,7 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   // יועצת
   await page.goto(`${BASE}/#/consultant`);
   await page.locator('.chip').first().click();
-  await page.waitForSelector('.msg.assistant b');
+  await page.waitForSelector('.msg.assistant mark');
   ok(chatRequests.length === 1 && chatRequests[0].messages.at(-1).role === 'user', 'suggestion chip sends one request with the user message');
   ok(await page.locator('text=מחוברת למודל שפה').isVisible(), 'status shows model mode');
   const before = chatRequests.length;
@@ -222,16 +244,41 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
 
   // תוצאות
   await page.goto(`${BASE}/#/results`);
-  ok(await page.locator('main .grid .stone').count() === 2, 'results page lists both results');
+  ok(await page.locator('.result-row').count() === 2, 'results page lists both results');
   ok(await page.locator('main svg.ternary').count() === 1, 'results page shows the combined ternary');
   await page.locator('main .btn.danger', { hasText: /^מחיקה$/ }).first().click();
-  ok(await page.locator('main .grid .stone').count() === 1, 'single delete removes a result');
+  ok(await page.locator('.result-row').count() === 1, 'single delete removes a result');
   page.once('dialog', (d) => d.accept());
   await page.locator('main button', { hasText: 'מחיקת כל התוצאות' }).click();
   ok(await page.locator('text=עדיין אין תוצאות').isVisible(), 'delete all clears results');
 
   await page.goto(`${BASE}/#/safety`);
   ok((await page.locator('main').textContent()).includes('1201'), 'safety page lists ERAN');
+
+  // מסך אחד: בלי גלילה במחשב, ובלי מילים חתוכות ב-SVG
+  const FIT = ['#/', '#/journey', '#/journey/tastes', '#/journey/build', '#/journey/year', '#/journey/prakriti', '#/journey/limits', '#/maps', '#/maps/build', '#/maps/tastes', '#/maps/gunas', '#/maps/body', '#/maps/clock', '#/maps/dhatu', '#/maps/safety', '#/maps/seasons', '#/library', '#/library/vata', '#/library/subdoshas', '#/library/rasa', '#/library/products', '#/library/article', '#/prakriti', '#/vikriti', '#/consultant', '#/results', '#/safety'];
+  for (const vp of [{ width: 1440, height: 900 }, { width: 1280, height: 800 }]) {
+    await page.setViewportSize(vp);
+    for (const h of FIT) {
+      await page.goto(`${BASE}/${h}`);
+      await page.waitForTimeout(500);
+      const r = await page.evaluate(() => {
+        const cut = [];
+        for (const svg of document.querySelectorAll('main svg')) {
+          const sb = svg.getBoundingClientRect();
+          if (!sb.width) continue;
+          for (const t of svg.querySelectorAll('text')) {
+            const tb = t.getBoundingClientRect();
+            if (tb.width && (tb.left < sb.left - 1 || tb.right > sb.right + 1 || tb.top < sb.top - 1 || tb.bottom > sb.bottom + 1)) cut.push(t.textContent.trim());
+          }
+        }
+        return { fits: document.documentElement.scrollHeight <= innerHeight + 1, h: document.documentElement.scrollHeight, cut };
+      });
+      ok(r.fits, `${vp.width}x${vp.height}: ${h} fits one screen (${r.h})`);
+      ok(!r.cut.length, `${vp.width}x${vp.height}: ${h} no clipped svg words ${r.cut.join('|')}`);
+    }
+  }
+  await page.setViewportSize({ width: 1280, height: 860 });
 
   // התקנה
   const cdp = await ctx.newCDPSession(page);
@@ -246,7 +293,7 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
 // נייד ומצב כהה
 {
   const { ctx, page } = await newPage({ width: 390, height: 844 });
-  for (const h of ['#/', '#/journey', '#/maps', '#/library/agni', '#/library', '#/library/prakriti', '#/prakriti', '#/vikriti', '#/consultant', '#/results', '#/safety']) {
+  for (const h of ['#/', '#/journey', '#/journey/tastes', '#/journey/build', '#/maps', '#/maps/tastes', '#/maps/safety', '#/library/agni', '#/library/rasa', '#/library', '#/library/prakriti', '#/prakriti', '#/vikriti', '#/consultant', '#/results', '#/safety']) {
     await page.goto(`${BASE}/${h}`);
     await page.waitForSelector('h1');
     ok(await noHScroll(page), `mobile: no horizontal scroll on ${h}`);
@@ -259,8 +306,7 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   await page.locator('button', { hasText: 'אין לי אף אחד' }).click();
   ok(await noHScroll(page), 'mobile: no horizontal scroll on vikriti items');
   await page.screenshot({ path: `${SHOTS}/vikriti-mobile.png` });
-  await page.goto(`${BASE}/#/journey`);
-  await page.locator('#ch-gunas').scrollIntoViewIfNeeded();
+  await page.goto(`${BASE}/#/journey/gunas`);
   await page.waitForTimeout(1500);
   await page.screenshot({ path: `${SHOTS}/journey-mobile.png` });
   await page.emulateMedia({ colorScheme: 'dark' });
@@ -268,8 +314,7 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
   ok(bg === 'rgb(15, 26, 20)', `dark mode body background ${bg}`);
   await page.screenshot({ path: `${SHOTS}/home-dark.png` });
-  await page.goto(`${BASE}/#/maps`);
-  await page.locator('#map-graph').scrollIntoViewIfNeeded();
+  await page.goto(`${BASE}/#/maps/graph`);
   await page.waitForTimeout(1800);
   await page.screenshot({ path: `${SHOTS}/graph-dark.png` });
   await ctx.close();

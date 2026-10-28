@@ -4,7 +4,8 @@ import { VIKRITI_ITEMS, VIKRITI_INTRO, SCALE, WARNING_SIGNS } from '../data/vikr
 import { RECOMMENDATIONS, DOSHA } from '../data/recommendations.js';
 import { scoreVikriti } from '../lib/scoring.js';
 import { latestResult, saveResult } from '../lib/storage.js';
-import { DoshaBars, doshaList, Claim } from '../components/Shell.jsx';
+import { DoshaBars, doshaList, Claim, Rich, Tabs } from '../components/Shell.jsx';
+import { DoshaMark } from '../viz/Glyphs.jsx';
 import { Ternary, VikritiDemo } from '../viz/index.jsx';
 
 export function DoctorAlert() {
@@ -22,111 +23,102 @@ export function DoctorAlert() {
 
 export function Recommendations({ dosha }) {
   return (
-    <div className={`stone d-${dosha}`}>
-      <div className="eyebrow">המלצות לאורח חיים</div>
-      <h2>
-        <span className="dot" />
-        לאיזון <span className="dosha-name">{DOSHA[dosha].name}</span>
+    <div className={`recs d-${dosha}`}>
+      <div className="eyebrow" style={{ margin: 0 }}>המלצות לאורח חיים</div>
+      <h2 style={{ fontSize: 'clamp(26px, 2.6vw, 38px)', margin: '3px 0 8px' }}>
+        <DoshaMark d={dosha} size={30} /> לאיזון <span className="dosha-name">{DOSHA[dosha].name}</span>
       </h2>
-      <p className="muted small">
-        ההמלצות נוגעות לתזונה, לשגרה, לשינה ולפעילות בלבד. אין כאן צמחים, תוספים או מינונים. מי שנמצאים בהריון, בהנקה,
-        עם מחלה כרונית או נוטלים תרופות, כדאי שיתייעצו עם הרופא לפני שינוי משמעותי בתזונה.
-      </p>
-      <div className="stack" style={{ gap: 12 }}>
-        {RECOMMENDATIONS[dosha].map((r) => (
-          <div key={r.area} style={{ borderTop: '1px solid var(--line)', paddingTop: 12 }}>
-            <div className="row" style={{ justifyContent: 'space-between' }}>
-              <b>{r.area}</b>
+      <Tabs
+        label="תחומי ההמלצות"
+        tabs={RECOMMENDATIONS[dosha].map((r) => ({
+          id: r.area,
+          label: r.area,
+          content: (
+            <div className="rec">
               <Claim type={r.claim} />
+              <p><Rich text={r.text} /></p>
+              <p className="muted small">הרציונל המסורתי: {r.why}{r.note ? ` ${r.note}` : ''}</p>
             </div>
-            <p style={{ margin: '6px 0' }}>{r.text}</p>
-            <p className="muted small" style={{ margin: 0 }}>
-              הרציונל המסורתי: {r.why}
-              {r.note ? ` ${r.note}` : ''}
-            </p>
-          </div>
-        ))}
-      </div>
+          ),
+        }))}
+      />
+      <p className="caption" style={{ marginTop: 8 }}>
+        תזונה, שגרה, שינה ופעילות בלבד. <mark className="hl">אין כאן צמחים, תוספים או מינונים</mark>. בהריון, בהנקה, במחלה כרונית או עם תרופות, התייעצו עם הרופא לפני שינוי משמעותי.
+      </p>
     </div>
   );
 }
 
 export function VikritiMethod() {
   return (
-    <div className="stone">
+    <div className="method">
       <h3>על מה השאלון נשען, ואיך הוא מודד את עצמו</h3>
-      <p className="claim-line"><Claim type="tradition" /></p>
-      <p>
-        הפריטים לקוחים מתיאורי הסימנים של עלייה בכל דושה בטקסטים הקלאסיים, למשל אשטאנגה הרידאיה (Ashtanga Hridaya),
-        סוטרה סתהאנה פרק 11. חמישה פריטים לכל דושה, בדירוג של 0 עד 3.
+      <p className="small">
+        <Claim type="tradition" /> הפריטים לקוחים מתיאורי הסימנים של עלייה בכל דושה, למשל באשטאנגה הרידאיה (Ashtanga Hridaya),
+        סוטרה סתהאנה 11. חמישה פריטים לכל דושה, בדירוג של 0 עד 3. <Claim type="assessment" /> השאלון לא עבר תיקוף מחקרי.
       </p>
-      <p className="claim-line"><Claim type="assessment" /></p>
-      <p style={{ marginBottom: 6 }}>השאלון לא עבר תיקוף מחקרי. שלושה דברים מגבילים את האמינות שלו, והאפליקציה מציגה אותם:</p>
-      <ul className="list-plain">
-        <li><b>כיסוי מלא:</b> אי אפשר לקבל תוצאה בלי לענות על כל 15 הפריטים.</li>
-        <li><b>סף מוצהר:</b> עלייה מוגדרת מעל 40 אחוז מהעוצמה האפשרית. זה סף של האפליקציה, לא של המסורת.</li>
-        <li><b>מגמה:</b> מדידה אחת היא תמונת מצב. מילוי חוזר אחרי כמה שבועות מראה אם הדפוס עקבי.</li>
+      <ul className="list-plain small">
+        <li><b>כיסוי מלא:</b> אין תוצאה בלי כל 15 הפריטים.</li>
+        <li><b>סף מוצהר:</b> עלייה מעל 40 אחוז מהעוצמה האפשרית. סף של האפליקציה, לא של המסורת.</li>
+        <li><b>מגמה:</b> מדידה אחת היא תמונת מצב. מילוי חוזר מראה אם הדפוס עקבי.</li>
       </ul>
     </div>
   );
 }
 
-export function VikritiResult({ result, prakriti }) {
+export function VikritiResult({ result, prakriti, children }) {
   const focus = result.calm ? prakriti?.type?.[0] || null : result.elevated[0] || result.top;
   const matchesPrakriti = prakriti && !result.calm && prakriti.type.includes(result.elevated[0] || result.top);
   return (
-    <div className="stack">
-      <div className="grid two">
-      <div className="stone viz-stone">
-        <Ternary
-          points={[
-            ...(prakriti ? [{ pct: prakriti.pct, color: 'var(--ink)', label: 'חוקה', r: 9 }] : []),
-            { pct: result.pct, color: 'var(--ember)', label: 'עכשיו', pulse: true, below: true },
-          ]}
-          arrow={prakriti && !result.calm ? [prakriti.pct, result.pct] : null}
-          label="האיזון הנוכחי ביחס לחוקה"
-        />
-        <p className="small muted" style={{ margin: 0 }}>
-          {prakriti ? 'החץ מראה לאן האיזון זז ביחס לחוקה שלך.' : 'מלאו את שאלון החוקה כדי לראות את החץ מהחוקה אל המצב הנוכחי.'}{' '}
-          <Claim type="assessment" /> המיקום מחושב מהיחס בין עוצמות הסימנים.
-        </p>
-      </div>
-      <div className="stone">
-        <div className="eyebrow">הדפוס בשבועיים האחרונים</div>
-        <h2>
+    <div className="split even">
+      <div className="text-col">
+        <div className="eyebrow" style={{ margin: 0 }}>האיזון שלי עכשיו · השבועיים האחרונים</div>
+        <h2 style={{ fontSize: 'clamp(30px, 3.2vw, 46px)' }}>
           {result.calm
             ? 'לא עלה דפוס בולט של עודף'
             : `סימנים של עלייה ב${doshaList(result.elevated.length ? result.elevated : [result.top])}`}
         </h2>
         <DoshaBars pct={result.pct} />
-        <p className="muted small" style={{ marginBottom: 0, marginTop: 14 }}>
-          האחוז הוא עוצמת הסימנים מתוך המקסימום האפשרי לכל דושה. מעל 40 אחוז נחשב כאן לעלייה. זה סף שנקבע לאפליקציה,
-          לא נתון מהמסורת.
+        <p className="caption">האחוז הוא עוצמת הסימנים מתוך המקסימום האפשרי. מעל 40 אחוז נחשב כאן לעלייה, סף של האפליקציה ולא של המסורת.</p>
+        <div className="stage mini">
+          <Ternary
+            points={[
+              ...(prakriti ? [{ pct: prakriti.pct, color: 'var(--ink)', label: 'חוקה', r: 9 }] : []),
+              { pct: result.pct, color: 'var(--ember)', label: 'עכשיו', pulse: true, below: true },
+            ]}
+            arrow={prakriti && !result.calm ? [prakriti.pct, result.pct] : null}
+            label="האיזון הנוכחי ביחס לחוקה"
+          />
+        </div>
+        <p className="caption">
+          {prakriti
+            ? matchesPrakriti
+              ? 'החץ יוצא מהחוקה. הדושה שעלתה בולטת גם בחוקה שלך: לפי המסורת, מה שחזק אצלנו יוצא ראשון מאיזון.'
+              : 'החץ יוצא מהחוקה. הדושה שעלתה אינה הבולטת בחוקה שלך: לפי המסורת זה קורה בעונה, בלחץ או בשינוי שגרה.'
+            : 'מלאו את שאלון החוקה כדי לראות חץ מהחוקה אל המצב הנוכחי.'}
         </p>
       </div>
-      </div>
-      {prakriti && !result.calm && (
-        <div className="note">
-          {matchesPrakriti
-            ? 'הדושה שעלתה היא גם דושה בולטת בחוקה שלך. לפי המסורת זה הדפוס הנפוץ: מה שחזק אצלנו הוא גם מה שיוצא ראשון מאיזון.'
-            : 'הדושה שעלתה אינה הבולטת בחוקה שלך. לפי המסורת זה קורה בעונה, בלחץ או בשינוי שגרה. כדאי לבדוק שוב בעוד כמה שבועות.'}
-        </div>
-      )}
-      {focus ? <Recommendations dosha={focus} /> : (
-        <div className="note">כדי לקבל המלצות מותאמות כשהאיזון שקט, מלאו קודם את <a href="#/prakriti">שאלון החוקה</a>.</div>
-      )}
-      <div className="note">
-        זהו תיאור של דפוס לפי המסורת, לא אבחנה. אם תסמין נמשך או מחמיר, פנו לרופא.
+      <div className="text-col">
+        {focus ? <Recommendations dosha={focus} /> : (
+          <p>כדי לקבל המלצות כשהאיזון שקט, מלאו קודם את <a href="#/prakriti">שאלון החוקה</a>.</p>
+        )}
+        <p className="small muted" style={{ margin: 0 }}>זהו תיאור של דפוס לפי המסורת, לא אבחנה. אם תסמין נמשך או מחמיר, <mark className="hl">פנו לרופא</mark>.</p>
+        {children}
       </div>
     </div>
   );
 }
+
+// סדר מעורב, כך שכל עמוד מכיל פריטים משלוש הדושות ולא חושף את המיון
+const MIXED = [0, 5, 10, 1, 6, 11, 2, 7, 12, 3, 8, 13, 4, 9, 14].map((k) => VIKRITI_ITEMS[k]);
+const PER = 5;
 
 export default function Vikriti() {
   const [stage, setStage] = useState('screen');
   const [warnings, setWarnings] = useState([]);
   const [ratings, setRatings] = useState({});
   const [saved, setSaved] = useState(null);
+  const [page, setPage] = useState(0);
   const prakriti = useMemo(() => latestResult('prakriti'), []);
   const answered = Object.keys(ratings).length;
 
@@ -142,15 +134,17 @@ export default function Vikriti() {
 
   if (stage === 'screen') {
     return (
-      <div className="stack" style={{ maxWidth: 720 }}>
+      <div className="screen">
+      <div className="split">
+      <div className="text-col">
         <div>
           <div className="eyebrow">שאלון איזון נוכחי · Vikriti</div>
           <h1>האיזון הנוכחי</h1>
           <p className="lead">{VIKRITI_INTRO}</p>
         </div>
-        <div className="stone">
-          <h3>לפני שמתחילים: האם יש לך עכשיו אחד מאלה?</h3>
-          <div>
+        <div>
+          <h3 style={{ margin: '0 0 3px' }}>לפני שמתחילים: האם יש לך עכשיו אחד מאלה?</h3>
+          <div className="checks">
             {WARNING_SIGNS.map((w) => (
               <label key={w} className="check">
                 <input type="checkbox" checked={warnings.includes(w)} onChange={() => toggleWarning(w)} />
@@ -167,61 +161,77 @@ export default function Vikriti() {
             <button className="btn ghost" onClick={() => setStage('items')}>הבנתי, ואפנה לרופא. להמשיך לשאלון</button>
           )}
         </div>
-        <div className="stone viz-stone"><VikritiDemo /></div>
-        <VikritiMethod />
+      </div>
+      <div className="stage">
+        <Tabs label="על השאלון" tabs={[
+          { id: 'demo', label: 'איך האיזון זז', content: <VikritiDemo /> },
+          { id: 'method', label: 'על מה השאלון נשען', content: <VikritiMethod /> },
+        ]} />
+      </div>
+      </div>
       </div>
     );
   }
 
   if (stage === 'result' && saved) {
     return (
-      <div className="stack">
-        <div className="eyebrow">שאלון איזון נוכחי · תוצאה</div>
-        <h1>האיזון שלי עכשיו</h1>
+      <div className="screen">
+        <h1 className="sr-only">האיזון שלי עכשיו</h1>
         {warnings.length > 0 && <DoctorAlert />}
-        <VikritiResult result={saved.result} prakriti={prakriti} />
-        <p className="small muted">{saved.ok ? 'התוצאה נשמרה במכשיר הזה בלבד.' : 'לא הצלחתי לשמור את התוצאה במכשיר.'}</p>
-        <div className="row">
-          <a className="btn" href="#/consultant">לשאול את היועצת</a>
-          <a className="btn ghost" href="#/results">כל התוצאות</a>
-        </div>
+        <VikritiResult result={saved.result} prakriti={prakriti}>
+          <p className="caption">{saved.ok ? 'התוצאה נשמרה במכשיר הזה בלבד.' : 'לא הצלחתי לשמור את התוצאה במכשיר.'}</p>
+          <div className="row">
+            <a className="btn" href="#/consultant">לשאול את היועצת</a>
+            <a className="btn ghost" href="#/results">כל התוצאות</a>
+          </div>
+        </VikritiResult>
       </div>
     );
   }
 
+  const pages = Math.ceil(MIXED.length / PER);
+  const slice = MIXED.slice(page * PER, page * PER + PER);
+  const pageDone = slice.every((it) => ratings[it.id] !== undefined);
   return (
-    <div className="stack" style={{ maxWidth: 760 }}>
-      <div>
-        <div className="eyebrow">שאלון איזון נוכחי · השבועיים האחרונים</div>
-        <h1>כמה זה נכון לגביך עכשיו?</h1>
+    <div className="screen">
+    <div className="stack" style={{ maxWidth: 980, width: '100%', margin: '0 auto' }}>
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'end' }}>
+        <div style={{ flex: '1 1 0', minWidth: 0 }}>
+          <div className="eyebrow">שאלון איזון נוכחי · השבועיים האחרונים · עמוד {page + 1} מתוך {pages}</div>
+          <h1 style={{ fontSize: 'clamp(32px, 3.6vw, 52px)', margin: 0 }}>כמה זה נכון לגביך עכשיו?</h1>
+        </div>
+        <span className="mono small">{answered} / {VIKRITI_ITEMS.length}</span>
       </div>
       <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={VIKRITI_ITEMS.length} aria-valuenow={answered}>
         <i style={{ width: `${(answered / VIKRITI_ITEMS.length) * 100}%` }} />
       </div>
-      {VIKRITI_ITEMS.map((it, i) => (
-        <motion.div
-          key={it.id}
-          className="stone"
-          style={{ padding: 18 }}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: Math.min(i * 0.03, 0.3) }}
-        >
-          <div id={`l-${it.id}`}>{it.t}</div>
-          <div className="scale" role="group" aria-labelledby={`l-${it.id}`}>
-            {SCALE.map((s, v) => (
-              <button key={s} aria-pressed={ratings[it.id] === v} onClick={() => setRatings({ ...ratings, [it.id]: v })}>
-                {s}
-              </button>
-            ))}
+      <motion.div key={page} className="items" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+        {slice.map((it) => (
+          <div key={it.id} className="item" data-d={it.d}>
+            <div id={`l-${it.id}`}>{it.t}</div>
+            <div className="scale" role="group" aria-labelledby={`l-${it.id}`}>
+              {SCALE.map((sc, v) => (
+                <button key={sc} aria-pressed={ratings[it.id] === v} onClick={() => setRatings({ ...ratings, [it.id]: v })}>
+                  {sc}
+                </button>
+              ))}
+            </div>
           </div>
-        </motion.div>
-      ))}
-      <div className="row">
-        <button className="btn warm" disabled={answered < VIKRITI_ITEMS.length} onClick={submit}>
-          {answered < VIKRITI_ITEMS.length ? `נותרו ${VIKRITI_ITEMS.length - answered} שאלות` : 'לראות את התוצאה'}
-        </button>
+        ))}
+      </motion.div>
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <button className="btn ghost" disabled={page === 0} onClick={() => setPage(page - 1)}>העמוד הקודם</button>
+        {page < pages - 1 ? (
+          <button className="btn warm" disabled={!pageDone} onClick={() => setPage(page + 1)}>
+            {pageDone ? 'לעמוד הבא' : 'עוד לענות בעמוד הזה'}
+          </button>
+        ) : (
+          <button className="btn warm" disabled={answered < VIKRITI_ITEMS.length} onClick={submit}>
+            {answered < VIKRITI_ITEMS.length ? `נותרו ${VIKRITI_ITEMS.length - answered} שאלות` : 'לראות את התוצאה'}
+          </button>
+        )}
       </div>
+    </div>
     </div>
   );
 }

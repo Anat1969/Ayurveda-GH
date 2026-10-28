@@ -45,7 +45,7 @@ export default function Ternary({ points = [], arrow = null, trail = [], regions
   const fp = focus ? project(toShares(focus.pct)) : [250, 290];
 
   return (
-    <svg viewBox="0 0 500 470" className="ternary" role="img" aria-label={label || 'משולש הדושות'}>
+    <svg viewBox="-46 -32 592 504" className="ternary" role="img" aria-label={label || 'משולש הדושות'}>
       <defs>
         <radialGradient id="prism-light">
           <stop offset="0" stopColor="var(--ember)" stopOpacity=".35" />
@@ -61,7 +61,7 @@ export default function Ternary({ points = [], arrow = null, trail = [], regions
       </defs>
 
       {/* קרן האור הנכנסת */}
-      <line x1="500" y1="200" x2={fp[0]} y2={fp[1]} stroke="var(--brass)" strokeWidth="1" strokeOpacity=".55" strokeDasharray="2 5" className={reduce ? undefined : 'sweep'} />
+      <line x1="540" y1="190" x2={fp[0]} y2={fp[1]} stroke="var(--brass)" strokeWidth="1" strokeOpacity=".55" strokeDasharray="2 5" className={reduce ? undefined : 'sweep'} />
 
       <polygon points={tri} className="tri-base" />
       <g clipPath="url(#prism-clip)">

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { screen, blockingReply } from '../lib/safety.js';
 import { localAnswer } from '../lib/localConsultant.js';
+import { Rich } from '../components/Shell.jsx';
 
 const SUGGESTIONS = [
   'מה ההבדל בין חוקה לאיזון נוכחי?',
@@ -17,13 +18,6 @@ const MODE_TEXT = {
   busy: 'חושבת',
 };
 
-// הדגשה של **סוג הטענה** בלבד. שאר הטקסט מוצג כמו שהוא.
-function Rich({ text }) {
-  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-    part.startsWith('**') && part.endsWith('**') ? <b key={i}>{part.slice(2, -2)}</b> : <span key={i}>{part}</span>,
-  );
-}
-
 export default function Consultant() {
   const [items, setItems] = useState([]);
   const [draft, setDraft] = useState('');
@@ -32,7 +26,7 @@ export default function Consultant() {
   const endRef = useRef(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+    if (items.length || busy) endRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [items, busy]);
 
   const add = (...list) => setItems((prev) => [...prev, ...list]);
@@ -85,13 +79,13 @@ export default function Consultant() {
   }
 
   return (
-    <div className="stack" style={{ maxWidth: 780 }}>
+    <div className="screen consult" style={{ maxWidth: 860, width: '100%', margin: '0 auto' }}>
       <div>
         <div className="eyebrow">יועצת איורוודה</div>
-        <h1>שאלות על המסורת</h1>
+        <h1 style={{ fontSize: 'clamp(32px, 3.6vw, 52px)' }}>שאלות על המסורת</h1>
         <p className="lead">
-          היועצת מסבירה את האיורוודה הקלאסית ומסמנת כל טענה: מסורת, הערכה או עובדה מחקרית. היא לא מאבחנת, לא נותנת
-          מינונים ולא ממליצה לשנות תרופות.
+          היועצת מסבירה את האיורוודה הקלאסית ומסמנת כל טענה: מסורת, הערכה או עובדה מחקרית. <mark className="hl">היא לא מאבחנת, לא נותנת
+          מינונים ולא ממליצה לשנות תרופות</mark>.
         </p>
         <div className="status" aria-live="polite">מצב: {busy ? MODE_TEXT.busy : MODE_TEXT[mode]}</div>
       </div>
@@ -99,7 +93,7 @@ export default function Consultant() {
       <div className="chat">
         <div className="messages" aria-live="polite">
           {items.length === 0 && (
-            <div className="stone">
+            <div>
               <p style={{ marginTop: 0 }}>אפשר להתחיל מאחת השאלות האלה:</p>
               <div className="chips">
                 {SUGGESTIONS.map((s) => (

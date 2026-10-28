@@ -30,9 +30,9 @@ function Page({ route }) {
     case 'library':
       return route.param ? <Concept id={route.param} /> : <Library />;
     case 'journey':
-      return <Journey />;
+      return <Journey param={route.param} />;
     case 'maps':
-      return <Maps />;
+      return <Maps param={route.param} />;
     case 'prakriti':
       return <Prakriti />;
     case 'vikriti':

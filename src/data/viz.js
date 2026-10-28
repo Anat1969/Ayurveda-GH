@@ -120,7 +120,30 @@ export const CONCEPT_LINKS = [
   ['pitta', 'agni'], ['agni', 'ama'], ['agni', 'dhatu'], ['dhatu', 'mala'], ['ama', 'mala'],
   ['dinacharya', 'ritucharya'], ['life-stages', 'vikriti'], ['life-stages', 'dosha'],
   ['ritucharya', 'dosha'], ['sources', 'article'], ['sources', 'prakriti'], ['article', 'dosha'], ['gunas', 'dinacharya'],
+  ['rasa', 'mahabhuta'], ['rasa', 'gunas'], ['rasa', 'dosha'],
+  ['subdoshas', 'vata'], ['subdoshas', 'pitta'], ['subdoshas', 'kapha'],
+  ['ojas', 'dhatu'], ['srotas', 'dhatu'], ['srotas', 'mala'],
+  ['trayopastambha', 'dinacharya'], ['trayopastambha', 'agni'],
+  ['products', 'sources'], ['products', 'article'],
 ];
+
+// שש הטעמים: היסודות (צ׳ראקה, סוטרה 26) וההשפעה על הדושות (סוטרה 1). -1 מאזן, 1 מגביר.
+export const TASTES = [
+  { id: 'madhura', name: 'מתוק', sk: 'Madhura', el: ['earth', 'water'], eff: { vata: -1, pitta: -1, kapha: 1 }, ex: 'אורז, חלב, תמרים' },
+  { id: 'amla', name: 'חמוץ', sk: 'Amla', el: ['earth', 'fire'], eff: { vata: -1, pitta: 1, kapha: 1 }, ex: 'לימון, יוגורט' },
+  { id: 'lavana', name: 'מלוח', sk: 'Lavana', el: ['water', 'fire'], eff: { vata: -1, pitta: 1, kapha: 1 }, ex: 'מלח, אצות' },
+  { id: 'katu', name: 'חריף', sk: 'Katu', el: ['air', 'fire'], eff: { vata: 1, pitta: 1, kapha: -1 }, ex: 'ג׳ינג׳ר, פלפל, שום' },
+  { id: 'tikta', name: 'מר', sk: 'Tikta', el: ['air', 'space'], eff: { vata: 1, pitta: -1, kapha: -1 }, ex: 'עלים ירוקים מרים, כורכום' },
+  { id: 'kashaya', name: 'עפיץ', sk: 'Kashaya', el: ['air', 'earth'], eff: { vata: 1, pitta: -1, kapha: -1 }, ex: 'עדשים, רימון, תה' },
+];
+
+// מבנה הגוף לפי החוקה (צ׳ראקה, ויממנה סתהאנה 8). פרופורציות לציור בלבד.
+export const BUILD = {
+  vata: { name: 'ואטה', frame: 'מבנה צר, גבוה או נמוך מהממוצע, קל ויבש', traits: ['גוף רזה, מפרקים בולטים', 'תנועה ודיבור מהירים', 'שינה קלה, תיאבון משתנה'], w: 0.64, h: 1.08, el: ['space', 'air'] },
+  pitta: { name: 'פיטה', frame: 'מבנה בינוני, שרירי ומחומם', traits: ['גוף בינוני, עור חם', 'תיאבון ועיכול חזקים', 'מיקוד וחדות'], w: 1, h: 1, el: ['fire', 'water'] },
+  kapha: { name: 'קאפה', frame: 'מבנה רחב, מוצק ויציב', traits: ['גוף רחב, עצמות חזקות', 'תנועה ודיבור איטיים', 'שינה עמוקה, סיבולת גבוהה'], w: 1.52, h: 0.95, el: ['water', 'earth'] },
+};
+
 
 export const GROUP_COLOR = {
   foundations: 'var(--brass)',

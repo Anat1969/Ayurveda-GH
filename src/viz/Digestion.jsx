@@ -12,10 +12,10 @@ export function DhatuCascade() {
   const H = top + (DHATUS.length - 1) * step + 40;
   return (
     <figure className="viz">
-      <svg viewBox={`0 0 600 ${H}`} role="img" aria-label="שבע הרקמות, מנוזל התזונה ועד רקמת הרבייה">
+      <svg viewBox={`0 -16 600 ${H + 16}`} role="img" aria-label="שבע הרקמות, מנוזל התזונה ועד רקמת הרבייה">
         <line x1="300" y1="6" x2="300" y2={H - 20} className="stroke-brass" strokeWidth="1.5" />
         {!reduce && <line x1="300" y1="6" x2="300" y2={H - 20} stroke="var(--ember)" strokeWidth="2.5" strokeDasharray="34 1400" className="sweep" />}
-        <text x="300" y="2" textAnchor="middle" fontSize="11" className="svg-mono">מזון</text>
+        <text x="300" y="-3" textAnchor="middle" fontSize="11" className="svg-mono">מזון</text>
         {DHATUS.map((d, i) => {
           const y = top + i * step;
           const side = i % 2 === 0 ? 1 : -1;
