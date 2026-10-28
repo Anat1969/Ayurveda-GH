@@ -16,7 +16,7 @@ const NCCIH = 'https://www.nccih.nih.gov/health/ayurvedic-medicine-in-depth';
 export default function Safety() {
   return (
     <div className="screen">
-      <div className="split even">
+      <div className="split">
         <div className="text-col">
           <div>
             <div className="eyebrow">בטיחות ומקורות</div>

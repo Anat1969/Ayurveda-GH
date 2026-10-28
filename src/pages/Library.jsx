@@ -43,7 +43,7 @@ export function Library() {
   );
 }
 
-const LONG = 520;
+const LONG = 420;
 
 export function Concept({ id }) {
   const c = conceptById(id);
@@ -60,11 +60,11 @@ export function Concept({ id }) {
   const prev = CONCEPTS[index - 1];
   const next = CONCEPTS[index + 1];
   const group = GROUPS.find((g) => g.id === c.group);
-  const paged = c.sections.length > 4 || c.sections.reduce((n, s) => n + s.text.length, 0) > LONG;
+  const paged = c.sections.length > 3 || c.sections.reduce((n, s) => n + s.text.length, 0) > LONG;
 
   return (
     <article className={`screen concept ${c.dosha ? `d-${c.dosha}` : ''}`}>
-      <div className="split">
+      <div className="split wide-viz">
         <div className="text-col">
           <div className="concept-head">
             <div className="eyebrow">

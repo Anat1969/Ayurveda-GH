@@ -1,5 +1,8 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { hasWebGL } from '../three/webgl.js';
+
+const VesselsScene = lazy(() => import('../three/Scenes2.jsx').then((m) => ({ default: m.VesselsScene })));
 import { GUNA_PAIRS, GUNA_PRESETS, GUNA_NAME, DOSHA_COLOR, gunaEffect } from '../data/viz.js';
 
 const DNAME = { vata: 'ואטה', pitta: 'פיטה', kapha: 'קאפה' };
@@ -40,6 +43,17 @@ export default function GunaLab({ compact = false }) {
       </div>
 
       <div className="lab-body">
+        {hasWebGL() ? (
+          <div className="vessels-wrap">
+            <Suspense fallback={<div className="stage3d vessels loading" />}><VesselsScene effect={effect} /></Suspense>
+            <div className="gauges-line" aria-live="polite">
+              {ORDER.map((d) => {
+                const s = effect[d].score;
+                return <span key={d} className="gauge"><b style={{ color: DOSHA_COLOR[d] }}>{DNAME[d]}</b> {s > 0 ? `מגביר · ${s}` : s < 0 ? `מאזן · ${-s}` : 'ללא שינוי'}</span>;
+              })}
+            </div>
+          </div>
+        ) : (
         <div className="gauges" aria-live="polite">
           {ORDER.map((d) => {
             const s = effect[d].score;
@@ -62,6 +76,7 @@ export default function GunaLab({ compact = false }) {
             );
           })}
         </div>
+        )}
 
         {!compact && (
           <div className="pairs">

@@ -107,15 +107,16 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   await page.locator('.seat.d-pitta').first().click();
   ok((await page.locator('.seat.d-pitta').first().getAttribute('aria-pressed')) === 'true', 'body map seat selects pitta');
   await page.goto(`${BASE}/#/maps/clock`);
-  const centre = await page.locator('main svg text').allTextContents();
-  ok(centre.some((t) => ['ואטה', 'פיטה', 'קאפה'].includes(t.trim())), 'dosha clock names the current dosha');
+  await page.waitForSelector('main .flabel, main svg text');
+  const centre = (await page.locator('main .flabel b, main svg text').allTextContents()).join(' ');
+  ok(/שעת (ואטה|פיטה|קאפה)/.test(centre) || ['ואטה', 'פיטה', 'קאפה'].some((d) => centre.includes(d)), 'dosha clock names the current dosha');
 
   // המסע: פרק אחד בכל מסך, עם דפדוף
   await page.goto(`${BASE}/#/journey`);
   const railCount = await page.locator('.rail button').count();
   ok(railCount === 12, `journey has ${railCount} chapters`);
   for (let i = 0; i < railCount; i++) {
-    ok(await page.locator('.chapter-viz svg, .chapter-viz .viz').count() >= 1, `journey chapter ${i + 1} has a visual`);
+    ok(await page.waitForSelector('.chapter-viz svg, .chapter-viz .viz', { timeout: 8000 }).then(() => true).catch(() => false), `journey chapter ${i + 1} has a visual`);
     if (i < railCount - 1) await page.locator('button', { hasText: 'הפרק הבא' }).click();
   }
   ok((await page.evaluate(() => location.hash)) === '#/journey/limits', 'journey next button walks to the last chapter');
@@ -132,17 +133,17 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   ok(mapCount === 15, `maps page offers ${mapCount} visuals`);
   for (let i = 0; i < mapCount; i++) {
     await page.locator('.map-list button').nth(i).click();
-    ok(await page.locator('.map-stage svg, .map-stage .viz').count() >= 1, `map ${i + 1} renders`);
+    ok(await page.waitForSelector('.map-stage svg, .map-stage .viz', { timeout: 8000 }).then(() => true).catch(() => false), `map ${i + 1} renders`);
   }
 
   // שש הטעמים ומבנה הגוף
   await page.goto(`${BASE}/#/maps/tastes`);
-  await page.locator('g[role="button"][aria-label^="חריף"]').click({ force: true });
-  const tasteText = await page.locator('.tastes .legend-block').textContent();
+  await page.locator('.seg-btn[aria-label^="חריף"], g[role="button"][aria-label^="חריף"]').first().click({ force: true });
+  const tasteText = await page.locator('.tastes3d .legend-block, .tastes .legend-block').first().textContent();
   ok(tasteText.includes('מגביר: ואטה ופיטה') && tasteText.includes('מאזן: קאפה'), 'pungent raises vata and pitta, balances kapha');
   await page.goto(`${BASE}/#/maps/build`);
   await page.locator('.seg-btn', { hasText: 'קאפה' }).click();
-  ok((await page.locator('.build .legend-block').textContent()).includes('רחב'), 'kapha build is broad');
+  ok((await page.locator('.build3d .legend-block, .build .legend-block').first().textContent()).includes('רחב'), 'kapha build is broad');
   await page.goto(`${BASE}/#/maps/safety`);
   ok(await page.locator('.gate-legend li').count() === 4, 'safety gates legend has four steps');
 
@@ -162,10 +163,10 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   // מפת הידע: מעבר למושג
   await page.goto(`${BASE}/#/maps/graph`);
   await page.waitForTimeout(1800);
-  await page.locator('g[role="link"][aria-label="אש העיכול"]').click({ force: true });
+  await page.locator('button.star-label[data-concept="agni"], g[role="link"][aria-label="אש העיכול"]').first().click({ force: true });
   ok((await page.evaluate(() => location.hash)) === '#/library/agni', 'knowledge graph node opens the concept');
   ok(await page.waitForSelector('.concept-viz .viz', { timeout: 5000 }).then(() => true).catch(() => false), 'concept page has its visual');
-  await page.locator('[aria-label^="טיקשנה"]').click({ force: true });
+  await page.locator('[aria-label^="טיקשנה"]').first().click({ force: true });
   ok((await page.locator('.concept-viz figcaption').textContent()).includes('טיקשנה'), 'agni flame hover explains the state');
 
   // שאלון חוקה
@@ -186,7 +187,7 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
     await page.waitForTimeout(240);
   }
   await page.waitForSelector('text=הדפוס שעלה');
-  ok(await page.locator('svg.ternary').count() >= 1, 'prakriti result shows the ternary');
+  ok(await page.locator('.ternary3d, svg.ternary').count() >= 1, 'prakriti result shows the ternary');
   ok(await page.locator('.bar-row').count() === 3, 'prakriti result shows three dosha bars');
   ok(await page.locator('text=15 מתוך 16 שאלות').isVisible(), 'prakriti result reports coverage');
   await page.screenshot({ path: `${SHOTS}/prakriti-result.png`, fullPage: true });
@@ -235,6 +236,7 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   ok(chatRequests.length === before + 1, 'dosage question still reaches the model, with a notice');
   ok((await page.locator('.msg.safety').last().textContent()).includes('מינונים'), 'dosage notice shown');
   apiMode = 'nokey';
+  await page.waitForFunction(() => !document.querySelector('main .status')?.textContent.includes('חושבת'));
   await page.locator('textarea').fill('מה זה קאפה?');
   await page.keyboard.press('Enter');
   await page.waitForSelector('text=מצב בסיסי');
@@ -245,7 +247,7 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   // תוצאות
   await page.goto(`${BASE}/#/results`);
   ok(await page.locator('.result-row').count() === 2, 'results page lists both results');
-  ok(await page.locator('main svg.ternary').count() === 1, 'results page shows the combined ternary');
+  ok(await page.locator('main .ternary3d, main svg.ternary').count() === 1, 'results page shows the combined ternary');
   await page.locator('main .btn.danger', { hasText: /^מחיקה$/ }).first().click();
   ok(await page.locator('.result-row').count() === 1, 'single delete removes a result');
   page.once('dialog', (d) => d.accept());
@@ -261,7 +263,7 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
     await page.setViewportSize(vp);
     for (const h of FIT) {
       await page.goto(`${BASE}/${h}`);
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(3000);
       const r = await page.evaluate(() => {
         const cut = [];
         for (const svg of document.querySelectorAll('main svg')) {
@@ -272,10 +274,17 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
             if (tb.width && (tb.left < sb.left - 1 || tb.right > sb.right + 1 || tb.top < sb.top - 1 || tb.bottom > sb.bottom + 1)) cut.push(t.textContent.trim());
           }
         }
+        for (const st of document.querySelectorAll('main .stage3d')) {
+          const sb = st.getBoundingClientRect();
+          for (const l of st.querySelectorAll('.flabel, .star-label')) {
+            const lb = l.getBoundingClientRect();
+            if (lb.width && (lb.left < sb.left - 2 || lb.right > sb.right + 2 || lb.top < sb.top - 2 || lb.bottom > sb.bottom + 2)) cut.push(l.textContent.trim());
+          }
+        }
         return { fits: document.documentElement.scrollHeight <= innerHeight + 1, h: document.documentElement.scrollHeight, cut };
       });
       ok(r.fits, `${vp.width}x${vp.height}: ${h} fits one screen (${r.h})`);
-      ok(!r.cut.length, `${vp.width}x${vp.height}: ${h} no clipped svg words ${r.cut.join('|')}`);
+      ok(!r.cut.length, `${vp.width}x${vp.height}: ${h} no clipped words ${r.cut.join('|')}`);
     }
   }
   await page.setViewportSize({ width: 1280, height: 860 });
