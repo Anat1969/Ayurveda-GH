@@ -9,8 +9,9 @@ import Ternary from './Ternary.jsx';
 import GunaLab from './GunaLab.jsx';
 import ConceptGraph from './ConceptGraph.jsx';
 import { ClaimMeter, SafetyFlow } from './Evidence.jsx';
+import { TasteWheel, DoshaBuild } from './Structure.jsx';
 
-export { ElementsFlow, DoshaClock, SeasonWheel, LifeStages, BodyMap, DhatuCascade, AgniFlames, Ternary, GunaLab, ConceptGraph, ClaimMeter, SafetyFlow };
+export { TasteWheel, DoshaBuild, ElementsFlow, DoshaClock, SeasonWheel, LifeStages, BodyMap, DhatuCascade, AgniFlames, Ternary, GunaLab, ConceptGraph, ClaimMeter, SafetyFlow };
 
 // מפת שבעת סוגי החוקה
 export function PrakritiMap() {
@@ -60,11 +61,17 @@ export function VikritiDemo() {
 
 const BY_CONCEPT = {
   mahabhuta: [ElementsFlow],
+  rasa: [TasteWheel],
+  subdoshas: [BodyMap],
+  ojas: [DhatuCascade],
+  srotas: [BodyMap],
+  trayopastambha: [() => <DoshaClock routine />],
+  products: [ClaimMeter],
   gunas: [GunaLab],
-  dosha: [ElementsFlow, BodyMap],
-  vata: [BodyMap, DoshaClock],
-  pitta: [BodyMap, DoshaClock],
-  kapha: [BodyMap, DoshaClock],
+  dosha: [DoshaBuild, ElementsFlow, BodyMap],
+  vata: [DoshaBuild, BodyMap, DoshaClock],
+  pitta: [DoshaBuild, BodyMap, DoshaClock],
+  kapha: [DoshaBuild, BodyMap, DoshaClock],
   prakriti: [PrakritiMap],
   vikriti: [VikritiDemo],
   agni: [AgniFlames],
@@ -78,13 +85,26 @@ const BY_CONCEPT = {
   article: [ClaimMeter],
 };
 
+const VIZ_NAME = new Map([[DoshaBuild, 'מבנה גוף'], [BodyMap, 'מפת גוף'], [DoshaClock, 'שעון'], [ElementsFlow, 'יסודות']]);
+
 export function ConceptViz({ id, dosha }) {
   const list = BY_CONCEPT[id] || [];
-  return list.map((V, i) => (
-    <div key={i} className="stone viz-stone">
-      {V === BodyMap ? <BodyMap highlight={dosha} /> : <V />}
-    </div>
-  ));
+  const [k, setK] = useState(0);
+  if (!list.length) return null;
+  const V = list[Math.min(k, list.length - 1)];
+  const el = V === BodyMap ? <BodyMap highlight={dosha} /> : V === DoshaBuild ? <DoshaBuild initial={dosha} /> : <V />;
+  return (
+    <>
+      {list.length > 1 && (
+        <div className="tabs" role="tablist" aria-label="המחשות">
+          {list.map((x, n) => (
+            <button key={n} role="tab" aria-selected={n === k} onClick={() => setK(n)}>{VIZ_NAME.get(x) || `המחשה ${n + 1}`}</button>
+          ))}
+        </div>
+      )}
+      <div key={k} className="concept-viz-one">{el}</div>
+    </>
+  );
 }
 
 // כותרת להמחשה במרכז המפות

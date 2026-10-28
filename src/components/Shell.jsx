@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CLAIM } from '../data/concepts.js';
 import { DOSHA } from '../data/recommendations.js';
 import { DOSHAS } from '../lib/scoring.js';
@@ -67,18 +67,36 @@ export function TopBar({ route }) {
 export function Footer() {
   return (
     <footer className="footer">
-      <div className="wrap stack" style={{ gap: 10 }}>
-        <div className="row">
-          <span>האפליקציה מסבירה מסורת. היא לא מאבחנת מחלות ולא מחליפה רופא.</span>
-          <a href="#/safety">בטיחות ומקורות</a>
-        </div>
-        <div className="emergency" aria-label="מספרי חירום">
+      <div className="wrap footer-line">
+        <span>מסבירה מסורת. לא מאבחנת ולא מחליפה רופא.</span>
+        <span className="emergency" aria-label="מספרי חירום">
           <span>מד"א <b>101</b></span>
-          <span>מספר החירום <b>112</b></span>
-          <span>ער"ן, מצוקה נפשית <b>1201</b></span>
-        </div>
+          <span>חירום <b>112</b></span>
+          <span>ער"ן <b>1201</b></span>
+        </span>
+        <a href="#/safety">בטיחות ומקורות</a>
       </div>
     </footer>
+  );
+}
+
+// הדגשה: **ביטוי** בנתונים הופך למרקר מודגש.
+export function Rich({ text }) {
+  return String(text).split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    part.startsWith('**') && part.endsWith('**') ? <mark key={i} className="hl">{part.slice(2, -2)}</mark> : <span key={i}>{part}</span>,
+  );
+}
+
+// צילום בלי מסגרת: נמוג אל הרקע בשוליים, והקרדיט מתחתיו.
+export function Photo({ src, alt, className = '', children, lazy }) {
+  return (
+    <figure className={`photo ${className}`}>
+      <div className="photo-fade">
+        <img src={src} alt={alt} loading={lazy ? 'lazy' : undefined} />
+        {children}
+      </div>
+      <figcaption className="credit">צילום מבוים · נוצר ב-Canva</figcaption>
+    </figure>
   );
 }
 
@@ -135,5 +153,21 @@ export function Steam({ style, color = 'rgba(239,230,210,.8)' }) {
       <path className="steam-line" style={{ animationDelay: '2.4s' }} d="M36 118 C 46 98 26 84 38 64 C 46 50 32 36 38 16" />
       <path className="steam-line" style={{ animationDelay: '4.6s' }} d="M24 118 C 16 100 30 88 22 70" />
     </svg>
+  );
+}
+
+// לשוניות: תוכן ארוך מוצג חלק אחד בכל פעם, כדי שהמסך לא יגלול.
+export function Tabs({ tabs, label, initial = 0 }) {
+  const [i, setI] = useState(initial);
+  const cur = tabs[Math.min(i, tabs.length - 1)];
+  return (
+    <div className="tabbed">
+      <div className="tabs" role="tablist" aria-label={label}>
+        {tabs.map((t, k) => (
+          <button key={t.id || k} role="tab" aria-selected={k === i} onClick={() => setI(k)}>{t.label}</button>
+        ))}
+      </div>
+      <div className="tab-panel" role="tabpanel">{cur.content}</div>
+    </div>
   );
 }

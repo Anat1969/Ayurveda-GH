@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { CONCEPTS, CLAIM } from '../data/concepts.js';
 import { RECOMMENDATIONS } from '../data/recommendations.js';
@@ -50,58 +51,56 @@ export function ClaimMeter() {
   );
 }
 
-// תרשים הבטיחות: זה בדיוק הסדר שבו המסנן בקוד בודק כל הודעה.
-const STEPS = [
-  { q: 'סימן אזהרה? כאב בחזה, דם, קוצר נשימה, חולשה בצד אחד', yes: 'רופא מיד · מד"א 101 · 112', tone: 'var(--alert)' },
-  { q: 'מצוקה נפשית או מחשבות על פגיעה עצמית?', yes: 'ער"ן 1201, בכל שעה', tone: 'var(--alert)' },
-  { q: 'תרופה, מינון, הריון, ילדים, מחלה כרונית?', yes: 'הודעת הפניה לרופא או לרוקח, ואז הסבר', tone: 'var(--brass)' },
+// תרשים הבטיחות כשערים קונצנטריים: כל הודעה עוברת מבחוץ פנימה, שער אחרי שער,
+// בדיוק בסדר שבו המסנן בקוד (src/lib/safety.js) בודק אותה. הטקסט במקרא, לא בתוך הצורות.
+const GATES = [
+  { n: 1, r: 196, tone: 'var(--alert)', q: 'סימן אזהרה', ex: 'כאב בחזה, דם, קוצר נשימה, חולשה בצד אחד', out: 'רופא מיד: מד"א 101 או 112', stop: true },
+  { n: 2, r: 146, tone: 'var(--alert)', q: 'מצוקה נפשית', ex: 'מחשבות על פגיעה עצמית', out: 'ער"ן 1201, בכל שעה', stop: true },
+  { n: 3, r: 96, tone: 'var(--brass)', q: 'תרופה, מינון, הריון, ילדים, מחלה כרונית', ex: '', out: 'הפניה לרופא או לרוקח, ואז הסבר', stop: false },
 ];
 
 export function SafetyFlow() {
   const reduce = useReducedMotion();
-  const rowH = 112;
-  const H = 70 + STEPS.length * rowH + 80;
+  const [hover, setHover] = useState(null);
+  const C = 210;
   return (
-    <figure className="viz">
-      <svg viewBox={`0 0 600 ${H}`} role="img" aria-label="תרשים הבטיחות של היועצת">
-        <defs>
-          <marker id="flow-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-            <path d="M0 0 L10 5 L0 10 Z" fill="var(--line)" />
-          </marker>
-        </defs>
-        <rect x="330" y="14" width="240" height="44" rx="0" className="flow-box" />
-        <text x="450" y="42" textAnchor="middle" fontSize="15" fontWeight="600" className="svg-ink">הודעה מהמשתמש</text>
-        {STEPS.map((s, i) => {
-          const y = 70 + i * rowH;
-          const cy = y + 52;
-          return (
-            <motion.g key={i} initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: reduce ? 0 : 0.25 * i }}>
-              <line x1="450" y1={y - 12} x2="450" y2={cy - 40} stroke="var(--line)" strokeWidth="2" markerEnd="url(#flow-arrow)" />
-              <path d={`M450 ${cy - 38} L570 ${cy} L450 ${cy + 38} L330 ${cy} Z`} className="flow-diamond" />
-              <foreignObject x="345" y={cy - 30} width="210" height="60">
-                <div className="flow-q">{s.q}</div>
-              </foreignObject>
-              <line x1="330" y1={cy} x2="262" y2={cy} stroke={s.tone} strokeWidth="2" markerEnd="url(#flow-arrow)" />
-              <text x="296" y={cy - 8} textAnchor="middle" fontSize="12" fontWeight="600" fill={s.tone}>כן</text>
-              <rect x="20" y={cy - 26} width="236" height="52" rx="0" fill="none" stroke={s.tone} />
-              <foreignObject x="30" y={cy - 22} width="216" height="44">
-                <div className="flow-a" style={{ color: s.tone }}>{s.yes}</div>
-              </foreignObject>
-              <text x="464" y={cy + 58} fontSize="12" fontWeight="600" className="svg-muted" textAnchor="middle">לא</text>
-            </motion.g>
-          );
-        })}
-        <motion.g initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: reduce ? 0 : 0.9 }}>
-          <line x1="450" y1={70 + STEPS.length * rowH - 22} x2="450" y2={70 + STEPS.length * rowH + 4} stroke="var(--line)" strokeWidth="2" markerEnd="url(#flow-arrow)" />
-          <rect x="300" y={70 + STEPS.length * rowH + 8} width="300" height="52" rx="0" fill="none" stroke="var(--kapha)" />
-          <foreignObject x="310" y={70 + STEPS.length * rowH + 12} width="280" height="44">
-            <div className="flow-a" style={{ color: 'var(--kapha-ink)' }}>הסבר מסורתי, מסומן, עם הפניה קצרה</div>
-          </foreignObject>
-        </motion.g>
+    <figure className="viz gates">
+      <svg viewBox="0 0 420 420" role="img" aria-label="שלושה שערים שכל הודעה עוברת לפני שהיא מגיעה להסבר">
+        {GATES.map((g) => (
+          <circle key={g.n} cx={C} cy={C} r={g.r} fill={g.tone} fillOpacity={hover === g.n ? 0.1 : 0.035}
+            stroke={g.tone} strokeWidth={hover === g.n ? 2.2 : 1.3} strokeDasharray={g.stop ? undefined : '3 5'}
+            style={{ transition: 'all .5s cubic-bezier(.22,1,.36,1)' }} />
+        ))}
+        <circle cx={C} cy={C} r="46" fill="var(--kapha)" fillOpacity={hover === 4 ? 0.3 : 0.16} stroke="var(--kapha)" strokeWidth="1.3" />
+        {GATES.map((g) => (
+          <g key={g.n}>
+            <circle cx={C} cy={C - g.r} r="13" fill="var(--bg)" stroke={g.tone} strokeWidth="1.3" />
+            <text x={C} y={C - g.r + 5} textAnchor="middle" fontSize="14" className="mono" fill={g.tone}>{g.n}</text>
+          </g>
+        ))}
+        <text x={C} y={C + 6} textAnchor="middle" fontSize="16" className="mono" fill="var(--kapha)">4</text>
+        {!reduce && (
+          <motion.circle r="6" cy={C} fill="var(--ink)" initial={{ cx: 418 }}
+            animate={{ cx: [418, C + 196, C + 196, C + 146, C + 146, C + 96, C + 96, C + 30, C + 30], opacity: [0, 1, 1, 1, 1, 1, 1, 1, 0] }}
+            transition={{ duration: 9, times: [0, 0.08, 0.2, 0.3, 0.42, 0.52, 0.64, 0.76, 1], repeat: Infinity, ease: 'easeInOut' }} />
+        )}
       </svg>
-      <figcaption>
-        זה הסדר שבו הקוד בודק כל הודעה, לפני שהיא מגיעה למודל. בשני המצבים הראשונים המודל לא מופעל בכלל, והתשובה קבועה.
-      </figcaption>
+      <ol className="gate-legend">
+        {GATES.map((g) => (
+          <li key={g.n} onMouseEnter={() => setHover(g.n)} onMouseLeave={() => setHover(null)} style={{ '--tone': g.tone }}>
+            <span className="gate-n mono">{g.n}</span>
+            <span>
+              <b>{g.q}?</b>{g.ex && <span className="muted"> {g.ex}</span>}
+              <span className="gate-out">כן: <mark className="hl">{g.out}</mark>{g.stop ? '. המודל לא מופעל.' : '.'}</span>
+            </span>
+          </li>
+        ))}
+        <li onMouseEnter={() => setHover(4)} onMouseLeave={() => setHover(null)} style={{ '--tone': 'var(--kapha)' }}>
+          <span className="gate-n mono">4</span>
+          <span><b>עבר את כל השערים</b><span className="gate-out">הסבר מסורתי, מסומן לפי סוג הטענה, עם הפניה קצרה.</span></span>
+        </li>
+      </ol>
+      <figcaption>הנקודה היא הודעה. היא נבדקת מבחוץ פנימה, לפני שהיא מגיעה למודל. שער מלא עוצר אותה, שער מקווקו מוסיף הפניה וממשיך.</figcaption>
     </figure>
   );
 }

@@ -9,69 +9,51 @@ import { DoshaBars, doshaList, Claim } from '../components/Shell.jsx';
 
 export function PrakritiMethod() {
   return (
-    <div className="stone">
+    <div className="method">
       <h3>על מה השאלון נשען, ואיך הוא מודד את עצמו</h3>
-      <p className="claim-line"><Claim type="tradition" /></p>
-      <p>
-        התכונות לקוחות מתיאורי סוגי החוקה בצ׳ראקה סמהיטה (Charaka Samhita), ויממנה סתהאנה פרק 8: מבנה הגוף, העור,
-        השיער, התיאבון, השינה, הדיבור והמזג.
+      <p className="small">
+        <Claim type="tradition" /> התכונות לקוחות מתיאורי החוקה בצ׳ראקה סמהיטה (Charaka Samhita), ויממנה סתהאנה 8: מבנה
+        הגוף, העור, השיער, התיאבון, השינה, הדיבור והמזג.{' '}
+        <Claim type="assessment" /> השאלון <mark className="hl">לא עבר תיקוף מחקרי</mark>. במסורת, חוקה נקבעת בבדיקה של מטפל.
+        בהודו יש כלים בתיקוף ראשוני, למשל של CCRAS.
       </p>
-      <p className="claim-line"><Claim type="assessment" /></p>
-      <p>
-        השאלון לא עבר תיקוף מחקרי. בהודו קיימים כלים שעברו תיקוף ראשוני, למשל מטעם המועצה המרכזית למחקר במדעי האיורוודה
-        (Central Council for Research in Ayurvedic Sciences, CCRAS). במסורת, קביעת חוקה נעשית בבדיקה של מטפל ולא בשאלון
-        עצמי.
-      </p>
-      <p style={{ marginBottom: 6 }}>שלושה מדדים מראים עד כמה אפשר לסמוך על התוצאה:</p>
-      <ul className="list-plain">
-        <li><b>כיסוי:</b> כמה שאלות נענו. פחות מ-60 אחוז, והתוצאה חלשה.</li>
-        <li><b>הבחנה:</b> הפער בין הדושה המובילה לבאה אחריה. פער קטן פירושו דפוס מעורב.</li>
-        <li><b>יציבות:</b> החוקה לא אמורה להשתנות. אם מילוי חוזר נותן תוצאה אחרת, התוצאה פחות אמינה.</li>
+      <ul className="list-plain small">
+        <li><b>כיסוי:</b> כמה שאלות נענו. מתחת ל-60 אחוז, התוצאה חלשה.</li>
+        <li><b>הבחנה:</b> הפער בין הדושה המובילה לבאה אחריה.</li>
+        <li><b>יציבות:</b> מילוי חוזר שנותן תוצאה אחרת מוריד את האמינות.</li>
       </ul>
     </div>
   );
 }
 
-export function PrakritiResult({ result, previous, history = [] }) {
+export function PrakritiResult({ result, previous, history = [], children }) {
   const drift = previous ? prakritiDrift(result.pct, previous.pct) : null;
   return (
-    <div className="stack">
-      <div className="grid two">
-        <div className="stone viz-stone">
-          <Ternary
-            points={[{ pct: result.pct, color: 'var(--ink)', label: 'החוקה שלי', pulse: true }]}
-            trail={history.map((h) => h.pct)}
-            label="החוקה שלי במשולש הדושות"
-          />
-          <p className="small muted" style={{ margin: 0 }}>
-            {history.length > 1 ? 'הנקודות האפורות הן מילויים קודמים. ככל שהן קרובות, התוצאה יציבה יותר.' : 'המיקום במשולש הוא היחס בין שלוש הדושות.'}
-          </p>
-        </div>
-      <div className="stone">
-        <div className="eyebrow">הדפוס שעלה</div>
-        <h2>
-          {result.type.length === 3 ? 'שלוש הדושות קרובות זו לזו' : `חוקה של ${doshaList(result.type)}`}
-        </h2>
-        <p className="muted">{result.type.map((d) => PRAKRITI_TEXT[d]).join(' ')}</p>
+    <div className="split even">
+      <div className="stage">
+        <Ternary
+          points={[{ pct: result.pct, color: 'var(--ink)', label: 'החוקה שלי', pulse: true }]}
+          trail={history.map((h) => h.pct)}
+          label="החוקה שלי במשולש הדושות"
+        />
+        <p className="caption">
+          {history.length > 1 ? 'הנקודות האפורות הן מילויים קודמים. ככל שהן קרובות, התוצאה יציבה יותר.' : 'המיקום במשולש הוא היחס בין שלוש הדושות.'}
+        </p>
+      </div>
+      <div className="text-col">
+        <div className="eyebrow">שאלון חוקה · הדפוס שעלה</div>
+        <h1 style={{ fontSize: 'clamp(34px, 3.8vw, 56px)' }}>
+          {result.type.length === 3 ? 'שלוש הדושות קרובות' : `חוקה של ${doshaList(result.type)}`}
+        </h1>
+        <p className="muted" style={{ margin: 0 }}>{result.type.map((d) => PRAKRITI_TEXT[d]).join(' ')}</p>
         <DoshaBars pct={result.pct} />
-      </div>
-      </div>
-      <div className="meta">
-        <div>
-          <small>כיסוי</small>
-          {result.answered} מתוך {result.total} שאלות
+        <div className="meta inline">
+          <div><small>כיסוי</small>{result.answered} מתוך {result.total} שאלות</div>
+          <div><small>הבחנה</small>{CONFIDENCE_TEXT[result.confidence]}</div>
+          <div><small>יציבות</small>{drift ? DRIFT_TEXT[drift.level] : 'אחרי מילוי שני'}</div>
         </div>
-        <div>
-          <small>הבחנה</small>
-          {CONFIDENCE_TEXT[result.confidence]}
-        </div>
-        <div>
-          <small>יציבות</small>
-          {drift ? DRIFT_TEXT[drift.level] : 'תופיע אחרי מילוי שני'}
-        </div>
-      </div>
-      <div className="note">
-        זהו תיאור של דפוס לפי המסורת, לא אבחנה. החוקה מתארת נטיות, ואינה אומרת דבר על מחלה.
+        <p className="small muted" style={{ margin: 0 }}>זהו <mark className="hl">תיאור של דפוס, לא אבחנה</mark>. החוקה מתארת נטיות, ואינה אומרת דבר על מחלה.</p>
+        {children}
       </div>
     </div>
   );
@@ -111,19 +93,19 @@ export default function Prakriti() {
 
   if (step === -1) {
     return (
-      <div className="stack">
-        <div>
-          <div className="eyebrow">שאלון חוקה · Prakriti</div>
-          <h1>החוקה שלי</h1>
-          <p className="lead">{PRAKRITI_INTRO}</p>
-          <div className="row" style={{ marginTop: 16 }}>
-            <button className="btn warm" onClick={() => setStep(0)}>להתחיל, {total} שאלות</button>
-            <a className="btn ghost" href="#/library/prakriti">מה זו חוקה</a>
+      <div className="screen">
+        <div className="split">
+          <div className="text-col">
+            <div className="eyebrow">שאלון חוקה · Prakriti</div>
+            <h1>החוקה שלי</h1>
+            <p className="lead">{PRAKRITI_INTRO}</p>
+            <div className="row">
+              <button className="btn warm" onClick={() => setStep(0)}>להתחיל, {total} שאלות</button>
+              <a className="btn ghost" href="#/library/prakriti">מה זו חוקה</a>
+            </div>
+            <PrakritiMethod />
           </div>
-        </div>
-        <div className="grid two">
-          <div className="stone viz-stone"><PrakritiMap /></div>
-          <PrakritiMethod />
+          <div className="stage"><PrakritiMap /></div>
         </div>
       </div>
     );
@@ -131,22 +113,22 @@ export default function Prakriti() {
 
   if (step >= total && saved) {
     return (
-      <div className="stack">
-        <div className="eyebrow">שאלון חוקה · תוצאה</div>
-        <h1>הדפוס שלי</h1>
-        <PrakritiResult result={saved.result} previous={previous} history={[...loadResults('prakriti')].reverse()} />
-        <p className="small muted">{saved.ok ? 'התוצאה נשמרה במכשיר הזה בלבד.' : 'לא הצלחתי לשמור את התוצאה במכשיר. היא תוצג רק עכשיו.'}</p>
-        <div className="row">
-          <a className="btn warm" href="#/vikriti">להמשיך לאיזון הנוכחי</a>
-          <button className="btn ghost" onClick={() => { setAnswers({}); setSaved(null); setStep(0); }}>למלא שוב</button>
-          <a className="btn ghost" href="#/results">כל התוצאות</a>
-        </div>
+      <div className="screen">
+        <PrakritiResult result={saved.result} previous={previous} history={[...loadResults('prakriti')].reverse()}>
+          <p className="caption">{saved.ok ? 'התוצאה נשמרה במכשיר הזה בלבד.' : 'לא הצלחתי לשמור את התוצאה במכשיר. היא תוצג רק עכשיו.'}</p>
+          <div className="row">
+            <a className="btn warm" href="#/vikriti">להמשיך לאיזון הנוכחי</a>
+            <button className="btn ghost" onClick={() => { setAnswers({}); setSaved(null); setStep(0); }}>למלא שוב</button>
+            <a className="btn ghost" href="#/results">כל התוצאות</a>
+          </div>
+        </PrakritiResult>
       </div>
     );
   }
 
   const live = scorePrakriti(answers, PRAKRITI_QUESTIONS);
   return (
+    <div className="screen">
     <div className="quiz-layout">
     <div className="stack">
       <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -179,11 +161,12 @@ export default function Prakriti() {
         <button className="btn ghost" onClick={skip}>לא מתאים לי, לדלג</button>
       </div>
     </div>
-    <aside className="stone viz-stone live-panel" aria-label="התוצאה מתעדכנת">
-      <div className="eyebrow">בזמן אמת</div>
+    <aside className="stage live-panel" aria-label="התוצאה מתעדכנת">
+      <div className="eyebrow" style={{ margin: 0 }}>בזמן אמת</div>
       <Ternary points={[{ pct: live.pct, color: 'var(--ink)', label: live.answered ? 'הנקודה שלי' : 'עוד לא ענית', pulse: true }]} label="הנקודה שלי במשולש" />
-      <p className="small muted" style={{ margin: 0 }}>כל תשובה מזיזה את הנקודה לעבר דושה אחת. אחרי {live.answered} תשובות.</p>
+      <p className="caption">כל תשובה מזיזה את הנקודה לעבר דושה אחת. אחרי {live.answered} תשובות.</p>
     </aside>
+    </div>
     </div>
   );
 }

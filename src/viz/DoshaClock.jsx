@@ -37,7 +37,7 @@ export default function DoshaClock({ routine = false, compact = false }) {
 
   return (
     <figure className={`viz ${compact ? 'viz-compact' : ''}`}>
-      <svg viewBox={routine ? '-36 -24 472 448' : '0 0 400 400'} role="img" aria-label={`שעון הדושות. עכשיו שעת ${DNAME[current]}`}>
+      <svg viewBox={routine ? '-36 -24 472 448' : '-20 -20 440 440'} role="img" aria-label={`שעון הדושות. עכשיו שעת ${DNAME[current]}`}>
         <circle cx={C} cy={C} r="182" className="clock-face" strokeWidth="1.5" />
         <circle cx={C} cy={C} r="174" fill="none" className="stroke-line" />
         {CLOCK.map((c, i) => {
