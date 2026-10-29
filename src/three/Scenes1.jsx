@@ -68,8 +68,8 @@ export function BuildScene({ initial }) {
   const X = { vata: 1.55, pitta: 0, kapha: -1.65 };
   const b = BUILD[sel];
   return (
-    <figure className="viz scene build3d">
-      <Stage3D camera={[0, 1.5, 8.2]} target={[-1.45, 1.5, 0]} size={[7.6, 3.5]} label="מבנה הגוף של ואטה, פיטה וקאפה">
+    <figure className="viz scene build3d stacked">
+      <Stage3D camera={[0, 1.5, 8.2]} target={[0, 1.5, 0]} size={[5.6, 3.4]} label="מבנה הגוף של ואטה, פיטה וקאפה">
         {ORDER.map((d) => (
           <group key={d} position={[X[d], 0, 0]} onClick={(e) => { e.stopPropagation(); setSel(d); }}
             onPointerOver={() => (document.body.style.cursor = 'pointer')} onPointerOut={() => (document.body.style.cursor = '')}>
@@ -83,7 +83,7 @@ export function BuildScene({ initial }) {
         <FloatLabel key={`t-${sel}`} position={[X[sel] + { vata: 0.85, pitta: 0.95, kapha: -1.25 }[sel], 1.9 * BUILD3D[sel].h, 0]}
           title={`${BUILD[sel].el.map((x) => EL[x].name).join(' ו')} בתוך החזה`} sub="היסודות של הדושה" tone={c.ink} size="s" delay={0.8} />
       </Stage3D>
-      <div className="legend-block overlay">
+      <div className="legend-block">
         <div className="seg" role="group" aria-label="בחירת דושה">
           {ORDER.map((d) => (
             <button key={d} className={`seg-btn d-${d}`} aria-pressed={sel === d} onClick={() => setSel(d)}>{DNAME[d]}</button>

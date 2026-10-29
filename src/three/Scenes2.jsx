@@ -8,7 +8,7 @@ import {
 } from '../data/viz.js';
 import { CONCEPTS, GROUPS } from '../data/concepts.js';
 import { go } from '../lib/router.js';
-import { Stage3D, useColors, ElementObject, BodySculpture, Plinth, Arrow, Ring, FloatLabel, Hover, DrawLine, Brass, Glass, BUILD3D } from './kit.jsx';
+import { Stage3D, useColors, ElementObject, BodySculpture, Plinth, Arrow, Ring, FloatLabel, Hover, DrawLine, Brass, Glass, Holo, BUILD3D } from './kit.jsx';
 import { Claim } from '../components/Shell.jsx';
 
 const DNAME = { vata: 'ואטה', pitta: 'פיטה', kapha: 'קאפה' };
@@ -269,7 +269,7 @@ export function ClockScene({ routine = false }) {
     <figure className="viz scene">
       <Stage3D camera={[0, 5, 4.2]} target={[0, 0.3, 0]} size={[6.2, 4.8]} label={`שעון הדושות. עכשיו שעת ${DNAME[cur]}`}>
         <Bowl R={R} />
-        <mesh position={[0, 0.62, 0]} rotation={[-Math.PI / 2, 0, 0]}><circleGeometry args={[R * 0.93, 96]} /><meshPhysicalMaterial color="#7FB3C4" roughness={0.05} transmission={0.6} thickness={0.4} transparent opacity={0.85} /></mesh>
+        <mesh position={[0, 0.62, 0]} rotation={[-Math.PI / 2, 0, 0]}><circleGeometry args={[R * 0.93, 96]} /><Holo color="#3FC3E8" base={0.16} glow={1.2} /></mesh>
         {CLOCK.map((s) => {
           const on = (h >= s.from && h < s.to) || (h + 24 >= s.from && h + 24 < s.to);
           const a0 = (s.from / 24) * Math.PI * 2;
@@ -289,7 +289,7 @@ export function ClockScene({ routine = false }) {
         <FloatLabel position={[0, 1.45, 0]} title={`עכשיו: שעת ${DNAME[cur]}`} sub={CLOCK_TEXT[cur].split('.')[0]} tone={c[cur]} size="l" delay={0.8} />
         {routine && ROUTINE_MARKS.map((m, i) => (
           <group key={m.t}>
-            <mesh position={hourPos(m.h, R + 0.06, 0.92)}><sphereGeometry args={[0.07, 24, 24]} /><meshPhysicalMaterial color="#FFFFFF" roughness={0.15} clearcoat={1} /></mesh>
+            <mesh position={hourPos(m.h, R + 0.06, 0.92)}><sphereGeometry args={[0.07, 24, 24]} /><meshStandardMaterial color="#FFFFFF" emissive="#FFF1CF" emissiveIntensity={1.4} toneMapped={false} /></mesh>
             <FloatLabel position={hourPos(m.h, R - 0.55, 0.95)} title={m.t} tone={c.ink} size="s" delay={1 + i * 0.2} />
           </group>
         ))}
@@ -438,7 +438,7 @@ export function SeasonsScene() {
           const on = i === m;
           return (
             <group key={t} position={pos(i)} onPointerOver={(e) => { e.stopPropagation(); setHover(i); }} onPointerOut={() => setHover(null)}>
-              <mesh><sphereGeometry args={[on ? 0.2 : 0.13, 32, 32]} /><meshPhysicalMaterial color={c[d]} roughness={0.2} clearcoat={1} emissive={c[d]} emissiveIntensity={on ? 0.3 : 0} /></mesh>
+              <mesh><sphereGeometry args={[on ? 0.2 : 0.13, 32, 32]} /><meshStandardMaterial color={c[d]} emissive={c[d]} emissiveIntensity={on ? 1.6 : 0.6} roughness={0.3} toneMapped={false} /></mesh>
               {on && <Ring key={m} center={[0, -0.28, 0]} rx={0.34} rz={0.2} color={c[d]} width={1.4} />}
               <FloatLabel position={[0, on ? -0.5 : -0.36, 0]} title={t} tone={on ? c[d] : c.muted} size="s" active={on} />
             </group>
@@ -495,7 +495,7 @@ function Vessel({ d, score, c }) {
   return (
     <group>
       <mesh position={[0, 1.0, 0]}><cylinderGeometry args={[0.36, 0.36, 2, 48, 1, true]} /><Glass thickness={0.15} /></mesh>
-      <mesh ref={liq} position={[0, 0.5, 0]} scale={[1, 0.5, 1]}><cylinderGeometry args={[0.33, 0.33, 1.8, 48]} /><meshPhysicalMaterial color={c[d]} roughness={0.15} transmission={0.4} thickness={0.6} transparent opacity={0.92} /></mesh>
+      <mesh ref={liq} position={[0, 0.5, 0]} scale={[1, 0.5, 1]}><cylinderGeometry args={[0.33, 0.33, 1.8, 48]} /><Holo color={c[d]} base={0.45} glow={1.2} /></mesh>
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0.95, 0]}><torusGeometry args={[0.39, 0.012, 8, 64]} /><Brass /></mesh>
       <Plinth r={0.44} />
     </group>
@@ -555,7 +555,7 @@ export function ConstellationScene({ layout }) {
               <group key={n.id} position={P(n)}>
                 <mesh onPointerOver={(e) => { e.stopPropagation(); setHover(n.id); }} onPointerOut={() => setHover(null)} onClick={() => go(`/library/${n.id}`)}>
                   <sphereGeometry args={[r, 32, 32]} />
-                  <meshPhysicalMaterial color={col} metalness={0.6} roughness={0.25} clearcoat={1} transparent opacity={on ? 1 : 0.25} emissive={col} emissiveIntensity={hover === n.id ? 0.6 : 0.05} />
+                  <meshStandardMaterial color={col} emissive={col} emissiveIntensity={hover === n.id ? 2.2 : on ? 1 : 0.25} transparent opacity={on ? 1 : 0.35} toneMapped={false} />
                 </mesh>
                 <Html position={[0, -r - 0.16, 0]} center zIndexRange={[20, 0]}>
                   <button type="button" className={`star-label ${on ? '' : 'dim'}`} data-concept={n.id} aria-label={term[n.id].term}

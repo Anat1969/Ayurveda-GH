@@ -576,3 +576,31 @@ main { padding: 0; }
 @media (min-width: 1024px) and (min-height: 620px) {
   .stage:not(.map-stage) .gates3d .stage3d { height: calc(var(--screen-h) - 400px); }
 }
+
+/* ===== הולוגרמה (תיקון של ענת, 2026-10-29): חלון לילה שנמוג אל הדף, בלי מסגרת ===== */
+.stage3d.holo { --tone: #EAF4FF; isolation: isolate; }
+.stage3d.holo canvas {
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, rgba(0,0,0,.6) 82%, transparent 100%);
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, rgba(0,0,0,.6) 82%, transparent 100%);
+}
+.stage3d.loading { background: radial-gradient(ellipse 60% 58% at 50% 50%, #06111B 40%, transparent 100%); }
+.stage3d.holo .flabel { color: #EAF4FF; text-shadow: 0 0 12px rgba(4, 14, 24, .95), 0 0 5px rgba(4, 14, 24, .9), 0 0 2px #06111B; }
+.stage3d.holo .flabel b { color: var(--tone, #EAF4FF); }
+.stage3d.holo .flabel span { color: #A9C1D1; }
+.stage3d.holo .star-label { color: #EAF4FF; text-shadow: 0 0 10px rgba(4, 14, 24, .95), 0 0 3px #06111B; }
+.stage3d.holo .star-label:hover, .stage3d.holo .star-label:focus-visible { color: #EBC47E; }
+.stage3d.holo .flabel.on b { text-decoration-color: currentColor; }
+.anatomy3d-layout { display: grid; gap: 13px; grid-template-columns: minmax(0, 1fr); align-items: center; }
+.anatomy3d .seat-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 13px; }
+.anatomy3d .seat-name { font-size: 20px; line-height: 26px; }
+.anatomy3d .seat-role { display: none; }
+.anatomy3d .stage3d { height: clamp(420px, 120vw, 640px); }
+@media (min-width: 1024px) and (min-height: 620px) {
+  .anatomy3d .stage3d { height: calc(var(--screen-h) - 260px); }
+  .map-stage .anatomy3d .stage3d { height: calc(var(--screen-h) - 330px); }
+  .concept-viz .anatomy3d .stage3d, .chapter-viz .anatomy3d .stage3d { height: calc(var(--screen-h) - 300px); }
+}
+@media (min-width: 1024px) and (min-height: 620px) {
+  .scene.build3d .stage3d { height: calc(var(--screen-h) - 300px); }
+  .map-stage .scene.build3d .stage3d { height: calc(var(--screen-h) - 340px); }
+}

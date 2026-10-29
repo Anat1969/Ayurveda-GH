@@ -102,8 +102,9 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   ok(await page.evaluate(() => getComputedStyle(document.querySelector('.home-photo .photo-fade')).maskImage.includes('gradient')), 'photo fades into the background, no frame');
   ok(await page.locator('.now-line .dosha-mark').count() === 2, 'home now line shows the hour and season dosha shapes');
   await page.goto(`${BASE}/#/maps/body`);
-  ok(await page.waitForFunction(() => { const i = document.querySelector('.anatomy img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 8000 }).then(() => true).catch(() => false), 'anatomy image loaded');
-  ok((await page.locator('.anatomy-layout + figcaption').first().textContent()).includes('Mariana Ruiz'), 'anatomy credit shown');
+  ok(await page.waitForFunction(() => document.querySelector('.anatomy3d canvas') || (document.querySelector('.anatomy img')?.naturalWidth > 0), null, { timeout: 10000 }).then(() => true).catch(() => false), 'anatomy model or illustration loaded');
+  ok((await page.locator('.anatomy3d figcaption, .anatomy-layout + figcaption').first().textContent()).includes('Mariana Ruiz'), 'anatomy credit shown');
+  ok(await page.waitForSelector('.anatomy3d .flabel:has-text("פיטה"), .anatomy img', { timeout: 10000 }).then(() => true).catch(() => false), 'dosha seats float beside the body');
   await page.locator('.seat.d-pitta').first().click();
   ok((await page.locator('.seat.d-pitta').first().getAttribute('aria-pressed')) === 'true', 'body map seat selects pitta');
   await page.goto(`${BASE}/#/maps/clock`);
