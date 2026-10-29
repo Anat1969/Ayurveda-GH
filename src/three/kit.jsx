@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Html, Line, ContactShadows, Environment, Lightformer } from '@react-three/drei';
+import { Html, Line, Environment, Lightformer, OrbitControls } from '@react-three/drei';
+import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useReducedMotion } from 'framer-motion';
 
@@ -8,29 +9,150 @@ import { useReducedMotion } from 'framer-motion';
 // נושא אמיתי בחומר אמיתי, אור חם אחד מאחור, ומעליו שכבת סכמה דקה שמציירת את עצמה,
 // ותוויות שמרחפות ליד הנושא: כותרת, ומתחתיה הסבר בסוגריים.
 
-// ---------- צבעים מתוך משתני ה-CSS, כך שמצב בהיר וכהה מתחלפים לבד ----------
-const VARS = ['--ink', '--muted', '--brass', '--brass-soft', '--ember', '--alert', '--bg', '--raised', '--vata', '--pitta', '--kapha', '--vata-tint', '--pitta-tint', '--kapha-tint', '--line', '--hair'];
-function readColors() {
-  const cs = getComputedStyle(document.documentElement);
-  const out = {};
-  for (const v of VARS) out[v.slice(2)] = cs.getPropertyValue(v).trim() || '#888888';
-  out.dark = matchMedia('(prefers-color-scheme: dark)').matches && document.documentElement.dataset.theme !== 'light';
-  return out;
-}
+// ---------- פלטת ההולוגרמה ----------
+// הבמה היא תמיד "חלון לילה" כחול עמוק שנמוג אל הדף, ולכן הצבעים לא תלויים במצב בהיר או כהה.
+export const HOLO = {
+  ink: '#EAF4FF', muted: '#9DB4C4', line: '#6B93AC', hair: '#2E4A5C', brass: '#EBC47E', 'brass-soft': '#EBC47E',
+  ember: '#FFB25A', alert: '#FF6B5E', bg: '#06111B', raised: '#0C1C29',
+  vata: '#7FD3FF', pitta: '#FF9A4D', kapha: '#7DE3A2',
+  'vata-tint': '#5BB8F0', 'pitta-tint': '#FF8040', 'kapha-tint': '#5ED68E',
+  body: '#3FA9F5', organ: '#FF8A3D', lung: '#FF5E4D', dark: true,
+};
 export function useColors() {
-  const [c, setC] = useState(readColors);
-  useEffect(() => {
-    const mq = matchMedia('(prefers-color-scheme: dark)');
-    const on = () => setC(readColors());
-    mq.addEventListener('change', on);
-    const obs = new MutationObserver(on);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    return () => { mq.removeEventListener('change', on); obs.disconnect(); };
-  }, []);
-  return c;
+  return HOLO;
 }
 
-export const ELEMENT_COLOR = { space: '#8A97AE', air: '#9CC0C6', fire: '#E0874E', water: '#3C7389', earth: '#7A5B3A' };
+// ---------- חומר ההולוגרמה: זוהר בשוליים (פרנל), שקוף במרכז, כמו צילום רנטגן מואר ----------
+const holoVert = `
+  varying vec3 vN; varying vec3 vV; varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    vN = normalize(normalMatrix * normal);
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    vV = normalize(-mv.xyz);
+    gl_Position = projectionMatrix * mv;
+  }`;
+const holoFrag = `
+  uniform vec3 uColor; uniform float uPower; uniform float uBase; uniform float uGlow; uniform float uOpacity;
+  uniform float uTime; uniform float uFlow;
+  varying vec3 vN; varying vec3 vV; varying vec2 vUv;
+  void main() {
+    float f = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), uPower);
+    float band = uFlow > 0.0 ? smoothstep(0.0, 0.08, 0.08 - abs(fract(vUv.x * 3.0 - uTime * 0.12) - 0.5) * 0.16) * uFlow : 0.0;
+    float a = (uBase + f * uGlow + band) * uOpacity;
+    gl_FragColor = vec4(uColor * (0.6 + f * 1.4 + band * 2.0), a);
+  }`;
+export function Holo({ color = '#3FA9F5', power = 2.2, base = 0.05, glow = 1.3, opacity = 1, flow = 0 }) {
+  const reduce = useReducedMotion();
+  const mat = useMemo(() => new THREE.ShaderMaterial({
+    uniforms: {
+      uColor: { value: new THREE.Color(color) }, uPower: { value: power }, uBase: { value: base }, uGlow: { value: glow },
+      uOpacity: { value: opacity }, uTime: { value: 0 }, uFlow: { value: flow },
+    },
+    vertexShader: holoVert, fragmentShader: holoFrag,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, toneMapped: false,
+  }), []);
+  useEffect(() => {
+    mat.uniforms.uColor.value.set(color);
+    mat.uniforms.uPower.value = power;
+    mat.uniforms.uBase.value = base;
+    mat.uniforms.uGlow.value = glow;
+    mat.uniforms.uOpacity.value = opacity;
+    mat.uniforms.uFlow.value = flow;
+  }, [color, power, base, glow, opacity, flow]);
+  useFrame((s) => { if (flow && !reduce) mat.uniforms.uTime.value = s.clock.elapsedTime; });
+  return <primitive object={mat} attach="material" />;
+}
+
+// ---------- ניצוצות אור ברקע (בוקה), כמו בתמונת ההשראה ----------
+let dotTex = null;
+function softDot() {
+  if (dotTex) return dotTex;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 64;
+  const g = cv.getContext('2d');
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,1)');
+  gr.addColorStop(0.35, 'rgba(255,255,255,.55)');
+  gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 64, 64);
+  dotTex = new THREE.CanvasTexture(cv);
+  return dotTex;
+}
+export function Bokeh({ count = 90, spread = [14, 8, 6], center = [0, 1.5, -4], seed = 7 }) {
+  const reduce = useReducedMotion();
+  const ref = useRef();
+  const { pos, col } = useMemo(() => {
+    let x = seed;
+    const rnd = () => ((x = (x * 16807) % 2147483647) / 2147483647);
+    const p = new Float32Array(count * 3);
+    const c = new Float32Array(count * 3);
+    const warm = new THREE.Color('#FF9A3C');
+    const cool = new THREE.Color('#3FA9F5');
+    for (let i = 0; i < count; i++) {
+      p[i * 3] = center[0] + (rnd() - 0.5) * spread[0];
+      p[i * 3 + 1] = center[1] + (rnd() - 0.5) * spread[1];
+      p[i * 3 + 2] = center[2] + (rnd() - 0.5) * spread[2];
+      const k = rnd() < 0.62 ? warm : cool;
+      const b = 0.35 + rnd() * 0.65;
+      c[i * 3] = k.r * b; c[i * 3 + 1] = k.g * b; c[i * 3 + 2] = k.b * b;
+    }
+    return { pos: p, col: c };
+  }, [count, seed]);
+  useFrame((s) => {
+    if (!ref.current || reduce) return;
+    ref.current.rotation.y = Math.sin(s.clock.elapsedTime * 0.05) * 0.12;
+    ref.current.position.y = Math.sin(s.clock.elapsedTime * 0.2) * 0.12;
+  });
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[pos, 3]} />
+        <bufferAttribute attach="attributes-color" args={[col, 3]} />
+      </bufferGeometry>
+      <pointsMaterial size={0.32} map={softDot()} vertexColors transparent depthWrite={false} blending={THREE.AdditiveBlending} sizeAttenuation toneMapped={false} />
+    </points>
+  );
+}
+
+// עשן עולה: חלקיקים שמתרחבים ונמוגים
+export function Smoke({ at = [0, 3.2, 0], color = '#5FB8FF', count = 26, height = 1.6 }) {
+  const reduce = useReducedMotion();
+  const ref = useRef();
+  const seeds = useMemo(() => Array.from({ length: count }, (_, i) => ({ o: i / count, x: Math.sin(i * 12.9) * 0.08, s: 0.6 + ((i * 7) % 5) * 0.12 })), [count]);
+  const pos = useMemo(() => new Float32Array(count * 3), [count]);
+  useFrame((st) => {
+    const g = ref.current?.geometry;
+    if (!g) return;
+    const t = reduce ? 0.5 : st.clock.elapsedTime * 0.12;
+    seeds.forEach((sd, i) => {
+      const k = (sd.o + t) % 1;
+      pos[i * 3] = at[0] + sd.x + Math.sin(k * 6 + i) * 0.12 * k;
+      pos[i * 3 + 1] = at[1] + k * height;
+      pos[i * 3 + 2] = at[2] + Math.cos(k * 5 + i) * 0.05;
+    });
+    g.attributes.position.needsUpdate = true;
+  });
+  return (
+    <points ref={ref}>
+      <bufferGeometry><bufferAttribute attach="attributes-position" args={[pos, 3]} /></bufferGeometry>
+      <pointsMaterial size={0.55} map={softDot()} color={color} transparent opacity={0.16} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+    </points>
+  );
+}
+
+// זוהר רך על הרצפה, במקום צל
+function GroundGlow({ y = 0, r = 4 }) {
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, y - 0.01, 0]}>
+      <circleGeometry args={[r, 64]} />
+      <meshBasicMaterial map={softDot()} color="#1E5B8A" transparent opacity={0.35} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+    </mesh>
+  );
+}
+
+export const ELEMENT_COLOR = { space: '#9FB7FF', air: '#9FE3F0', fire: '#FF9A4D', water: '#3FC3E8', earth: '#D08A4B' };
 export const BUILD3D = {
   vata: { w: 0.7, h: 1.1, el: ['space', 'air'] },
   pitta: { w: 1, h: 1, el: ['fire', 'water'] },
@@ -64,7 +186,7 @@ function CameraFit({ dir, target, size, fov, margin = 1.1 }) {
     const box = gl.domElement.closest('.stage3d');
     if (!box) return;
     const b = box.getBoundingClientRect();
-    const pad = 6;
+    const pad = Math.max(6, Math.min(b.width, b.height) * 0.06);
     for (const l of box.querySelectorAll('.flabel, .star-label')) {
       const r = l.getBoundingClientRect();
       if (!r.width) continue;
@@ -86,48 +208,57 @@ function CameraFit({ dir, target, size, fov, margin = 1.1 }) {
   return null;
 }
 
-// ---------- הבמה: קנבס שקוף, אור חם אחד, השתקפויות רכות, צל מגע ----------
-export function Stage3D({ children, camera = [0, 2.2, 7.4], fov = 32, target = [0, 0.6, 0], size = [7, 4], height, label, className = '', shadowY = 0, shadowScale = 12 }) {
+// ---------- הבמה: חלון לילה, אור חם אחד, זוהר וניצוצות ----------
+const fine = typeof matchMedia !== 'undefined' && matchMedia('(pointer: fine)').matches;
+export function Stage3D({ children, camera = [0, 2.2, 7.4], fov = 32, target = [0, 0.6, 0], size = [7, 4], height, label, className = '', shadowY = 0, shadowScale = 12, orbit = true, bokeh = true }) {
   const reduce = useReducedMotion();
-  const c = useColors();
   return (
-    <div className={`stage3d ${className}`} style={height ? { height } : undefined} role="img" aria-label={label}>
+    <div className={`stage3d holo ${className}`} style={height ? { height } : undefined} role="img" aria-label={label}>
       <Canvas
         dpr={[1, 2]} frameloop={reduce ? 'demand' : 'always'}
-        gl={{ antialias: true, alpha: true, preserveDrawingBuffer: false }}
-        camera={{ position: camera, fov, near: 0.1, far: 60 }}
-        onCreated={({ camera: cam, gl }) => { cam.lookAt(...target); gl.toneMapping = THREE.ACESFilmicToneMapping; gl.toneMappingExposure = c.dark ? 1.05 : 1.12; }}
+        gl={{ antialias: true, alpha: false, preserveDrawingBuffer: false }}
+        camera={{ position: camera, fov, near: 0.1, far: 80 }}
+        onCreated={({ camera: cam, gl }) => { cam.lookAt(...target); gl.toneMapping = THREE.ACESFilmicToneMapping; gl.toneMappingExposure = 1.15; }}
       >
+        <color attach="background" args={[HOLO.bg]} />
+        <fog attach="fog" args={[HOLO.bg, 10, 26]} />
         <CameraFit dir={camera} target={target} size={size} fov={fov} />
-        <ambientLight intensity={c.dark ? 0.35 : 0.55} />
-        {/* האור האחד: חם, מאחור ומלמעלה */}
-        <directionalLight position={[3.5, 5.5, -3]} intensity={2.4} color="#FFD7A0" />
-        <directionalLight position={[-4, 3, 5]} intensity={c.dark ? 0.5 : 0.9} color="#F4EEE3" />
+        {orbit && fine && (
+          <OrbitControls target={target} enablePan={false} enableZoom={false} rotateSpeed={0.5}
+            minPolarAngle={Math.PI * 0.18} maxPolarAngle={Math.PI * 0.55} minAzimuthAngle={-Math.PI / 3} maxAzimuthAngle={Math.PI / 3} />
+        )}
+        <ambientLight intensity={0.35} />
+        {/* האור האחד: חם, מאחור ומלמעלה, ואור קצה כחול מהצד */}
+        <directionalLight position={[3.5, 5.5, -3]} intensity={2.6} color="#FFD7A0" />
+        <directionalLight position={[-5, 2, 3]} intensity={0.9} color="#5FB8FF" />
         <Environment resolution={128} frames={1}>
           <Lightformer form="rect" intensity={3} color="#FFD9A6" position={[3, 4, -4]} scale={[6, 3, 1]} />
-          <Lightformer form="rect" intensity={1.2} color="#F4EEE3" position={[-5, 2, 3]} scale={[4, 4, 1]} />
-          <Lightformer form="ring" intensity={0.8} color="#C9A45C" position={[0, 6, 0]} scale={3} />
-          <Lightformer form="rect" intensity={0.4} color="#9CC0C6" position={[0, -3, 4]} scale={[10, 2, 1]} />
+          <Lightformer form="rect" intensity={1.6} color="#3FA9F5" position={[-5, 2, 3]} scale={[4, 4, 1]} />
+          <Lightformer form="ring" intensity={0.8} color="#EBC47E" position={[0, 6, 0]} scale={3} />
         </Environment>
+        {bokeh && <Bokeh center={[target[0], target[1] + 0.8, target[2] - 4]} spread={[size[0] * 2.4, size[1] * 2.2, 5]} />}
         <Suspense fallback={null}>{children}</Suspense>
-        <ContactShadows position={[0, shadowY, 0]} opacity={c.dark ? 0.6 : 0.38} scale={shadowScale} blur={2.6} far={4} color={c.dark ? '#000000' : '#4A3A22'} />
+        <GroundGlow y={shadowY} r={shadowScale * 0.35} />
+        <EffectComposer multisampling={0} disableNormalPass>
+          <Bloom mipmapBlur intensity={1.15} luminanceThreshold={0.18} luminanceSmoothing={0.35} radius={0.75} />
+          <Vignette offset={0.3} darkness={0.55} eskil={false} />
+        </EffectComposer>
       </Canvas>
     </div>
   );
 }
 
 // ---------- חומרים ----------
-export function Brass({ color = '#B8893E', rough = 0.28 }) {
-  return <meshStandardMaterial color={color} metalness={1} roughness={rough} envMapIntensity={1.3} />;
+export function Brass({ color = '#C9974A', rough = 0.28 }) {
+  return <meshStandardMaterial color={color} metalness={1} roughness={rough} envMapIntensity={1.6} emissive="#5A3810" emissiveIntensity={0.35} />;
 }
-export function Glass({ color = '#ffffff', thickness = 0.6, rough = 0.04, opacity = 1, tint = 0 }) {
-  return (
-    <meshPhysicalMaterial color={color} transmission={1} thickness={thickness} roughness={rough} ior={1.45}
-      transparent opacity={opacity} attenuationColor={color} attenuationDistance={tint ? 1.2 : 6} envMapIntensity={1.1} clearcoat={1} clearcoatRoughness={0.05} />
-  );
+// זכוכית וקרמיקה הופכות להולוגרמה: אותה צורה, זוהר בשוליים
+const glassTone = (c) => (!c || c === '#ffffff' || c === '#F6EFE2' || c === '#F1E6D2' ? '#8FD8FF' : c);
+export function Glass({ color, opacity = 1, tint = 0 }) {
+  return <Holo color={glassTone(color)} base={tint ? 0.12 : 0.04} glow={1.25} opacity={opacity} />;
 }
-export function Ceramic({ color = '#EFE6D2', rough = 0.55 }) {
-  return <meshStandardMaterial color={color} roughness={rough} metalness={0} envMapIntensity={0.7} />;
+export function Ceramic({ color = '#8FD8FF' }) {
+  return <Holo color={color} base={0.08} glow={1.2} />;
 }
 
 // ---------- שכבת הסכמה: קו שמצייר את עצמו ----------
@@ -289,8 +420,8 @@ export function ElementObject({ id, r = 0.34, still = false }) {
   if (id === 'space') {
     return (
       <group>
-        <mesh><sphereGeometry args={[r, 64, 64]} /><Glass thickness={0.25} /></mesh>
-        <mesh><sphereGeometry args={[r * 0.08, 16, 16]} /><meshBasicMaterial color="#8A97AE" transparent opacity={0.5} /></mesh>
+        <mesh><sphereGeometry args={[r, 64, 64]} /><Holo color={ELEMENT_COLOR.space} base={0.02} glow={1.5} power={2.6} /></mesh>
+        <mesh><sphereGeometry args={[r * 0.08, 16, 16]} /><meshBasicMaterial color="#DDE6FF" toneMapped={false} /></mesh>
       </group>
     );
   }
@@ -304,7 +435,7 @@ export function ElementObject({ id, r = 0.34, still = false }) {
             return (
               <mesh key={k} position={[Math.cos(a) * r * 0.85, Math.sin(k * 2.1) * r * 0.25, Math.sin(a) * r * 0.85]}>
                 <sphereGeometry args={[r * 0.2, 32, 32]} />
-                <meshPhysicalMaterial color="#EEF3F2" roughness={0.18} metalness={0} clearcoat={1} sheen={1} sheenColor="#9CC0C6" />
+                <meshStandardMaterial color="#EAFBFF" emissive={ELEMENT_COLOR.air} emissiveIntensity={1.4} roughness={0.2} toneMapped={false} />
               </mesh>
             );
           })}
@@ -332,7 +463,7 @@ export function ElementObject({ id, r = 0.34, still = false }) {
   if (id === 'water') {
     return (
       <group>
-        <mesh scale={[1, 0.42, 1]}><sphereGeometry args={[r, 64, 64]} /><Glass color="#7FB3C4" thickness={1.2} tint={1} /></mesh>
+        <mesh scale={[1, 0.42, 1]}><sphereGeometry args={[r, 64, 64]} /><Holo color={ELEMENT_COLOR.water} base={0.18} glow={1.4} /></mesh>
         <mesh ref={ripple} rotation={[-Math.PI / 2, 0, 0]} position={[0, -r * 0.3, 0]}>
           <ringGeometry args={[r * 1.05, r * 1.09, 96]} />
           <meshBasicMaterial color={ELEMENT_COLOR.water} transparent opacity={0.4} side={THREE.DoubleSide} />
@@ -341,9 +472,10 @@ export function ElementObject({ id, r = 0.34, still = false }) {
     );
   }
   return (
-    <mesh geometry={stoneGeo}>
-      <meshStandardMaterial color="#6E5236" roughness={0.95} metalness={0} />
-    </mesh>
+    <group>
+      <mesh geometry={stoneGeo}><meshStandardMaterial color="#6E5236" roughness={0.9} metalness={0.1} emissive="#3A2210" emissiveIntensity={0.5} /></mesh>
+      <mesh geometry={stoneGeo} scale={1.04}><Holo color={ELEMENT_COLOR.earth} base={0.02} glow={1.2} power={3} /></mesh>
+    </group>
   );
 }
 
@@ -366,7 +498,7 @@ function Joint({ p, r }) {
   return (
     <mesh position={p}>
       <sphereGeometry args={[r, 24, 24]} />
-      <meshStandardMaterial color="#B8893E" metalness={1} roughness={0.3} />
+      <meshStandardMaterial color="#E8C27A" emissive="#C08A3A" emissiveIntensity={0.9} metalness={0.6} roughness={0.3} toneMapped={false} />
     </mesh>
   );
 }
@@ -380,7 +512,7 @@ export function BodySculpture({ d, tint, active = true, scale = 1, showElements 
   const Y = (y) => y * h;
   const X = (x) => x * w * k;
   const op = active ? 1 : 0.3;
-  const mat = () => <meshPhysicalMaterial color={tint} roughness={0.38} clearcoat={0.6} clearcoatRoughness={0.25} sheen={0.4} sheenColor="#ffffff" transparent opacity={op} />;
+  const mat = () => <Holo color={tint} base={0.05} glow={1.35} power={2.3} opacity={op} />;
   const lr = (r) => r * wl * k;
   const legs = [-1, 1].map((s) => ({
     hip: [X(0.1 * s), Y(1.3), 0], knee: [X(0.105 * s), Y(0.74), Y(0.01)], ankle: [X(0.1 * s), Y(0.14), 0],
@@ -403,8 +535,7 @@ export function BodySculpture({ d, tint, active = true, scale = 1, showElements 
       <mesh position={[0, Y(1.58), 0]} scale={[X(0.15), Y(0.13), lr(0.11)]}><sphereGeometry args={[1, 32, 24]} />{mat()}</mesh>
       <mesh position={[0, Y(1.86), 0]} scale={[X(0.25), Y(0.24), lr(0.15)]}>
         <sphereGeometry args={[1, 48, 32]} />
-        <meshPhysicalMaterial color={tint} transmission={active ? 0.94 : 0.5} thickness={0.35} roughness={0.08} ior={1.42} transparent opacity={active ? 1 : 0.3}
-          attenuationColor={tint} attenuationDistance={1.6} clearcoat={1} clearcoatRoughness={0.06} />
+        <Holo color={tint} base={0.1} glow={1.6} power={2} opacity={op} />
       </mesh>
       {arms.map((a, i) => (
         <group key={`a${i}`}>
