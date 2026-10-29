@@ -1,0 +1,7 @@
+body.bin / body.json
+Source: BodyParts3D, © The Database Center for Life Science (DBCLS), licensed under Creative Commons Attribution 4.0 International.
+https://dbarchive.biosciencedbc.jp/en/bodyparts3d/
+Data: partof_BP3D_4.0_obj_99 (FMA part-of models). Organs were merged, simplified with meshoptimizer (shape-preserving) and compressed. Build script: scripts/pack-anatomy.cjs
+
+digestive.svg
+Mariana Ruiz (LadyofHats), public domain, Wikimedia Commons.

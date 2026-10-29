@@ -4,6 +4,8 @@ import { Html, Line, Environment, Lightformer, OrbitControls } from '@react-thre
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useReducedMotion } from 'framer-motion';
+import { CalloutCtx, CalloutAnchor, Callouts, createCalloutStore } from './callouts.jsx';
+import { useBody } from './anatomyData.js';
 
 // ערכת התלת מימד. שפת הסגנון (docs/design-language.md, "נושא מואר ושכבת סכמה"):
 // נושא אמיתי בחומר אמיתי, אור חם אחד מאחור, ומעליו שכבת סכמה דקה שמציירת את עצמה,
@@ -24,9 +26,10 @@ export function useColors() {
 
 // ---------- חומר ההולוגרמה: זוהר בשוליים (פרנל), שקוף במרכז, כמו צילום רנטגן מואר ----------
 const holoVert = `
-  varying vec3 vN; varying vec3 vV; varying vec2 vUv;
+  varying vec3 vN; varying vec3 vV; varying vec2 vUv; varying float vWY;
   void main() {
     vUv = uv;
+    vWY = (modelMatrix * vec4(position, 1.0)).y;
     vN = normalize(normalMatrix * normal);
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     vV = normalize(-mv.xyz);
@@ -34,20 +37,23 @@ const holoVert = `
   }`;
 const holoFrag = `
   uniform vec3 uColor; uniform float uPower; uniform float uBase; uniform float uGlow; uniform float uOpacity;
-  uniform float uTime; uniform float uFlow;
-  varying vec3 vN; varying vec3 vV; varying vec2 vUv;
+  uniform float uTime; uniform float uFlow; uniform float uScanY;
+  varying vec3 vN; varying vec3 vV; varying vec2 vUv; varying float vWY;
   void main() {
     float f = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), uPower);
     float band = uFlow > 0.0 ? smoothstep(0.0, 0.08, 0.08 - abs(fract(vUv.x * 3.0 - uTime * 0.12) - 0.5) * 0.16) * uFlow : 0.0;
+    band += exp(-pow((vWY - uScanY) / 0.012, 2.0)) * 0.45;
     float a = (uBase + f * uGlow + band) * uOpacity;
     gl_FragColor = vec4(uColor * (0.6 + f * 1.4 + band * 2.0), a);
   }`;
+// קו סריקה משותף, כמו בסורק CT. מחוץ למפת הגוף הוא רחוק ולא נראה.
+export const SCAN = { value: -100 };
 export function Holo({ color = '#3FA9F5', power = 2.2, base = 0.05, glow = 1.3, opacity = 1, flow = 0 }) {
   const reduce = useReducedMotion();
   const mat = useMemo(() => new THREE.ShaderMaterial({
     uniforms: {
       uColor: { value: new THREE.Color(color) }, uPower: { value: power }, uBase: { value: base }, uGlow: { value: glow },
-      uOpacity: { value: opacity }, uTime: { value: 0 }, uFlow: { value: flow },
+      uOpacity: { value: opacity }, uTime: { value: 0 }, uFlow: { value: flow }, uScanY: SCAN,
     },
     vertexShader: holoVert, fragmentShader: holoFrag,
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, toneMapped: false,
@@ -163,8 +169,7 @@ export { hasWebGL } from './webgl.js';
 
 // מצלמה שמתאימה את עצמה לרוחב ולגובה של הבמה, כך ששום נושא לא נחתך
 function CameraFit({ dir, target, size, fov, margin = 1.1 }) {
-  const { camera, size: px, gl, invalidate } = useThree();
-  const last = useRef(-1);
+  const { camera, size: px, invalidate } = useThree();
   const place = () => {
     const aspect = px.width / Math.max(px.height, 1);
     const t = Math.tan(((fov / 2) * Math.PI) / 180);
@@ -178,42 +183,26 @@ function CameraFit({ dir, target, size, fov, margin = 1.1 }) {
   useEffect(() => {
     place();
   }, [px.width, px.height, size.join(), target.join(), dir.join()]);
-  // שומר על המילים: תווית שיוצאת מהבמה זזה פנימה, בלי לשנות את גודל הנושא
-  useFrame((st) => {
-    const now = st.clock.elapsedTime;
-    if (now - last.current < 0.05) return;
-    last.current = now;
-    const box = gl.domElement.closest('.stage3d');
-    if (!box) return;
-    const b = box.getBoundingClientRect();
-    const pad = Math.max(6, Math.min(b.width, b.height) * 0.06);
-    for (const l of box.querySelectorAll('.flabel, .star-label')) {
-      const r = l.getBoundingClientRect();
-      if (!r.width) continue;
-      const ox = parseFloat(l.dataset.nx || 0);
-      const oy = parseFloat(l.dataset.ny || 0);
-      const left = r.left - ox;
-      const right = r.right - ox;
-      const top = r.top - oy;
-      const bottom = r.bottom - oy;
-      const nx = left < b.left + pad ? b.left + pad - left : right > b.right - pad ? b.right - pad - right : 0;
-      const ny = top < b.top + pad ? b.top + pad - top : bottom > b.bottom - pad ? b.bottom - pad - bottom : 0;
-      if (nx !== ox || ny !== oy) {
-        l.dataset.nx = nx;
-        l.dataset.ny = ny;
-        l.style.transform = nx || ny ? `translate(${nx}px, ${ny}px)` : '';
-      }
-    }
-  });
   return null;
 }
 
 // ---------- הבמה: חלון לילה, אור חם אחד, זוהר וניצוצות ----------
 const fine = typeof matchMedia !== 'undefined' && matchMedia('(pointer: fine)').matches;
-export function Stage3D({ children, camera = [0, 2.2, 7.4], fov = 32, target = [0, 0.6, 0], size = [7, 4], height, label, className = '', shadowY = 0, shadowScale = 12, orbit = true, bokeh = true }) {
+export function Stage3D({ children, camera = [0, 2.2, 7.4], fov = 32, target = [0, 0.6, 0], size = [7, 4], height, label, className = '', shadowY = 0, shadowScale = 12, orbit = true, bokeh = true, bloom = 0.8, margins = true }) {
   const reduce = useReducedMotion();
+  const store = useMemo(createCalloutStore, []);
+  const stageRef = useRef();
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el || !margins) return undefined;
+    const ro = new ResizeObserver(() => el.classList.toggle('callouts-numbered', el.clientWidth < 470));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   return (
-    <div className={`stage3d holo ${className}`} style={height ? { height } : undefined} role="img" aria-label={label}>
+    <CalloutCtx.Provider value={store}>
+    <div ref={stageRef} className={`stage3d holo ${margins ? '' : 'no-margins'} ${className}`} style={height ? { height } : undefined} role="img" aria-label={label}>
+      <div className="stage-canvas">
       <Canvas
         dpr={[1, 2]} frameloop={reduce ? 'demand' : 'always'}
         gl={{ antialias: true, alpha: false, preserveDrawingBuffer: false }}
@@ -239,12 +228,15 @@ export function Stage3D({ children, camera = [0, 2.2, 7.4], fov = 32, target = [
         {bokeh && <Bokeh center={[target[0], target[1] + 0.8, target[2] - 4]} spread={[size[0] * 2.4, size[1] * 2.2, 5]} />}
         <Suspense fallback={null}>{children}</Suspense>
         <GroundGlow y={shadowY} r={shadowScale * 0.35} />
-        <EffectComposer multisampling={0} disableNormalPass>
-          <Bloom mipmapBlur intensity={1.15} luminanceThreshold={0.18} luminanceSmoothing={0.35} radius={0.75} />
+        <EffectComposer multisampling={4} disableNormalPass>
+          <Bloom mipmapBlur intensity={bloom} luminanceThreshold={0.3} luminanceSmoothing={0.3} radius={0.6} />
           <Vignette offset={0.3} darkness={0.55} eskil={false} />
         </EffectComposer>
       </Canvas>
+      </div>
+      <Callouts store={store} stageRef={stageRef} />
     </div>
+    </CalloutCtx.Provider>
   );
 }
 
@@ -347,16 +339,9 @@ export function Arrow({ from, to, lift = 1.2, color, delay = 0, width = 1.3, flo
 }
 
 // ---------- טקסט מרחף ----------
-export function FloatLabel({ position, title, sub, tone, delay = 0, size = 'm', align = 'center', onClick, active, className = '' }) {
-  return (
-    <Html position={position} center zIndexRange={[20, 0]} style={{ pointerEvents: onClick ? 'auto' : 'none' }}>
-      <div className={`flabel flabel-${size} ${active ? 'on' : ''} ${className}`} style={{ '--tone': tone, '--delay': `${delay}s`, textAlign: align }}
-        onClick={onClick} role={onClick ? 'button' : undefined}>
-        <b>{title}</b>
-        {sub && <span>({sub})</span>}
-      </div>
-    </Html>
-  );
+// כל תווית בסצנה היא קריאה מהשוליים: הטקסט מחוץ לגרפיקה, וקו הובלה אל הנקודה
+export function FloatLabel({ position, title, sub, tone, size = 'm', onClick, active, side }) {
+  return <CalloutAnchor position={position} title={title} sub={sub} tone={tone} size={size} onClick={onClick} active={active} side={side} />;
 }
 
 // ריחוף עדין של נושא, בקצב נשימה
@@ -504,60 +489,28 @@ function Joint({ p, r }) {
 }
 
 export function BodySculpture({ d, tint, active = true, scale = 1, showElements = true }) {
+  // גוף אדם אמיתי (BodyParts3D) כהולוגרמה, בפרופורציות של החוקה: ואטה צרה וגבוהה, קאפה רחבה
+  const body = useBody();
   const b = BUILD3D[d];
-  const k = scale;
-  const h = b.h * k;
-  const w = b.w;
-  const wl = Math.pow(w, 0.75);
-  const Y = (y) => y * h;
-  const X = (x) => x * w * k;
+  if (!body) return null;
+  const H = 2.6 * b.h * scale;
+  const k = H / body.height;
+  const wx = Math.pow(b.w, 0.62);
   const op = active ? 1 : 0.3;
-  const mat = () => <Holo color={tint} base={0.05} glow={1.35} power={2.3} opacity={op} />;
-  const lr = (r) => r * wl * k;
-  const legs = [-1, 1].map((s) => ({
-    hip: [X(0.1 * s), Y(1.3), 0], knee: [X(0.105 * s), Y(0.74), Y(0.01)], ankle: [X(0.1 * s), Y(0.14), 0],
-  }));
-  const arms = [-1, 1].map((s) => ({
-    sh: [X(0.29 * s), Y(2.05), 0], el: [X(0.33 * s), Y(1.66), -Y(0.02)], wr: [X(0.35 * s), Y(1.3), Y(0.03)],
-  }));
   return (
-    <group>
-      {legs.map((l, i) => (
-        <group key={`l${i}`}>
-          <Capsule a={l.hip} b={l.knee} r={lr(0.075)}>{mat()}</Capsule>
-          <Capsule a={l.knee} b={l.ankle} r={lr(0.056)}>{mat()}</Capsule>
-          <Joint p={l.knee} r={lr(0.052)} />
-          <mesh position={[l.ankle[0], Y(0.05), Y(0.05)]} scale={[lr(0.06), Y(0.04), lr(0.11)]}><sphereGeometry args={[1, 20, 16]} />{mat()}</mesh>
-        </group>
-      ))}
-      <mesh position={[0, Y(1.36), 0]} scale={[X(0.2), Y(0.11), lr(0.13)]}><sphereGeometry args={[1, 32, 24]} />{mat()}</mesh>
-      {legs.map((l, i) => <Joint key={`h${i}`} p={l.hip} r={lr(0.055)} />)}
-      <mesh position={[0, Y(1.58), 0]} scale={[X(0.15), Y(0.13), lr(0.11)]}><sphereGeometry args={[1, 32, 24]} />{mat()}</mesh>
-      <mesh position={[0, Y(1.86), 0]} scale={[X(0.25), Y(0.24), lr(0.15)]}>
-        <sphereGeometry args={[1, 48, 32]} />
-        <Holo color={tint} base={0.1} glow={1.6} power={2} opacity={op} />
-      </mesh>
-      {arms.map((a, i) => (
-        <group key={`a${i}`}>
-          <Joint p={a.sh} r={lr(0.05)} />
-          <Capsule a={a.sh} b={a.el} r={lr(0.048)}>{mat()}</Capsule>
-          <Joint p={a.el} r={lr(0.04)} />
-          <Capsule a={a.el} b={a.wr} r={lr(0.04)}>{mat()}</Capsule>
-          <mesh position={[a.wr[0], a.wr[1] - Y(0.06), a.wr[2]]} scale={[lr(0.035), Y(0.06), lr(0.025)]}><sphereGeometry args={[1, 16, 16]} />{mat()}</mesh>
-        </group>
-      ))}
-      <Capsule a={[0, Y(2.08), 0]} b={[0, Y(2.24), 0]} r={lr(0.045)}>{mat()}</Capsule>
-      <mesh position={[0, Y(2.38), Y(0.01)]} scale={[Y(0.105) * Math.pow(w, 0.25), Y(0.135), Y(0.115)]}><sphereGeometry args={[1, 48, 48]} />{mat()}</mesh>
+    <group scale={[k * wx, k, k * Math.pow(b.w, 0.5)]}>
+      <mesh geometry={body.skin}><Holo color={tint} base={0.006} glow={0.95} power={2.7} opacity={op} /></mesh>
+      <mesh geometry={body.bones}><Holo color="#BFE6FF" base={0.004} glow={0.32} power={2.6} opacity={op * 0.8} /></mesh>
       {showElements && (
         <>
-          <group position={[0, Y(1.96), 0]}><ElementObject id={b.el[0]} r={Math.min(X(0.1), 0.12 * k + 0.02)} still={!active} /></group>
-          <group position={[0, Y(1.74), 0]}><ElementObject id={b.el[1]} r={Math.min(X(0.1), 0.12 * k + 0.02)} still={!active} /></group>
+          <group position={[0, body.height * 0.775, 0.02]} scale={[1 / (k * wx), 1 / k, 1 / (k * Math.pow(b.w, 0.5))]}><ElementObject id={b.el[0]} r={Math.min(0.11 * scale * 1.6, 0.22)} still={!active} /></group>
+          <group position={[0, body.height * 0.66, 0.02]} scale={[1 / (k * wx), 1 / k, 1 / (k * Math.pow(b.w, 0.5))]}><ElementObject id={b.el[1]} r={Math.min(0.11 * scale * 1.6, 0.22)} still={!active} /></group>
         </>
       )}
     </group>
   );
 }
-export const bodyHeight = (d, scale = 1) => 2.55 * BUILD3D[d].h * scale;
+export const bodyHeight = (d, scale = 1) => 2.6 * BUILD3D[d].h * scale;
 
 // בסיס פליז דק מתחת לנושא
 export function Plinth({ r = 0.5, y = 0 }) {
