@@ -28,13 +28,13 @@ export function ElementsScene() {
           <group key={d} position={[DX[d], 0, DZ]} onPointerOver={(e) => { e.stopPropagation(); setFocus(d); }} onPointerOut={() => setFocus(null)}>
             <Plinth r={0.42 * BUILD3D[d].w} />
             <BodySculpture d={d} tint={tintOf(c, d)} scale={0.78} active={!focus || focus === d || ELEMENTS.some((e) => e.id === focus && e.doshas.includes(d))} />
-            <FloatLabel position={[0, 2.25 * BUILD3D[d].h, 0]} title={DNAME[d]} sub={BUILD3D[d].el.map((x) => EL[x].name).join(' + ')} tone={c[d]} size="l" delay={1.4} />
+            <FloatLabel position={[0, 1.45 * BUILD3D[d].h, 0]} side={d === 'kapha' ? 'left' : 'right'} title={DNAME[d]} sub={BUILD3D[d].el.map((x) => EL[x].name).join(' + ')} tone={c[d]} size="l" delay={1.4} />
           </group>
         ))}
         {ELEMENTS.map((e, i) => (
           <group key={e.id} position={[EX[e.id], 0.42, EZ]} onPointerOver={(ev) => { ev.stopPropagation(); setFocus(e.id); }} onPointerOut={() => setFocus(null)}>
             <Hover phase={i * 1.3} amp={0.06}><ElementObject id={e.id} r={0.3} /></Hover>
-            <FloatLabel position={[0, -0.62, 0]} title={e.name} sub={e.sk} tone={c.ink} delay={0.2 + i * 0.12} />
+            <FloatLabel position={[0, 0, 0]} title={e.name} sub={e.sk} tone={c.ink} delay={0.2 + i * 0.12} />
           </group>
         ))}
         {ELEMENTS.flatMap((e, i) => e.doshas.map((d, k) => (
@@ -77,10 +77,10 @@ export function BuildScene({ initial }) {
             <Turn on={sel === d}><BodySculpture d={d} tint={tintOf(c, d)} active={sel === d} /></Turn>
             {sel === d && <Ring key={sel} center={[0, 0.02, 0]} rx={0.95 * BUILD3D[d].w + 0.25} rz={0.42} color={c[d]} width={1.6} />}
             
-            <FloatLabel position={[0, 2.85 * BUILD3D[d].h, 0]} title={DNAME[d]} sub={BUILD[d].frame.split(',')[0]} tone={c[d]} size="l" active={sel === d} delay={0.3} />
+            <FloatLabel position={[0, 1.9 * BUILD3D[d].h, 0]} side={d === 'kapha' ? 'left' : 'right'} title={DNAME[d]} sub={BUILD[d].frame.split(',')[0]} tone={c[d]} size="l" active={sel === d} delay={0.3} />
           </group>
         ))}
-        <FloatLabel key={`t-${sel}`} position={[X[sel] + { vata: 0.85, pitta: 0.95, kapha: -1.25 }[sel], 1.9 * BUILD3D[sel].h, 0]}
+        <FloatLabel key={`t-${sel}`} position={[X[sel], 1.85 * BUILD3D[sel].h, 0.1]} side={sel === 'kapha' ? 'left' : 'right'}
           title={`${BUILD[sel].el.map((x) => EL[x].name).join(' ו')} בתוך החזה`} sub="היסודות של הדושה" tone={c.ink} size="s" delay={0.8} />
       </Stage3D>
       <div className="legend-block">
@@ -129,7 +129,7 @@ export function TastesScene() {
           <group key={d} position={DP[d]}>
             <Plinth r={0.3 * BUILD3D[d].w} />
             <Grow s={t.eff[d] > 0 ? 1.18 : 0.82}><BodySculpture d={d} tint={tintOf(c, d)} scale={0.46} /></Grow>
-            <FloatLabel position={[0, t.eff[d] > 0 ? 1.68 : 1.24, 0]} title={DNAME[d]} sub={t.eff[d] > 0 ? 'מגביר' : 'מאזן'} tone={c[d]} />
+            <FloatLabel position={[0, 0.85, 0]} title={DNAME[d]} sub={t.eff[d] > 0 ? 'מגביר' : 'מאזן'} tone={c[d]} />
           </group>
         ))}
         {ORDER.map((d) => (
@@ -146,7 +146,7 @@ export function TastesScene() {
                 <group position={[-0.2, 0, 0]}><ElementObject id={x.el[1]} r={on ? 0.24 : 0.19} still={!on} /></group>
               </Hover>
               {on && <Ring key={sel} center={[0, -0.5, 0]} rx={0.62} rz={0.26} color={c.brass} width={1.4} />}
-              <FloatLabel position={[0, -0.58, 0.05]} title={x.name} sub={on ? `${EL[x.el[0]].name} + ${EL[x.el[1]].name}` : x.sk} tone={on ? c.ink : c.muted} active={on} />
+              <FloatLabel position={[0, 0, 0]} title={x.name} sub={on ? `${EL[x.el[0]].name} + ${EL[x.el[1]].name}` : x.sk} tone={on ? c.ink : c.muted} active={on} />
             </group>
           );
         })}

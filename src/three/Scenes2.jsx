@@ -1,6 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
 import { useReducedMotion } from 'framer-motion';
 import * as THREE from 'three';
 import {
@@ -74,7 +73,7 @@ function Bead({ target, color, r = 0.11, pulse, label, below, c }) {
           <ringGeometry args={[r * 1.1, r * 1.25, 48]} /><meshBasicMaterial color={color} transparent opacity={0.5} side={THREE.DoubleSide} />
         </mesh>
       )}
-      {label && <FloatLabel position={[0, below ? -0.62 : 0.42, below ? 0.3 : 0]} title={label} tone={color} size="s" />}
+      {label && <FloatLabel position={[0, 0, 0]} title={label} tone={color} size="s" />}
     </group>
   );
 }
@@ -111,7 +110,7 @@ export function PrismScene({ points = [], arrow = null, trail = [], regions = fa
         {ORDER.map((d) => {
           const p = to3(V2[d]);
           const o = OUTV[d];
-          return <FloatLabel key={d} position={[p[0] + o[0] * 0.8, 0.3, p[1] + o[1] * 0.75]} title={DNAME[d]} tone={c[d]} size="l" delay={0.6} />;
+          return <FloatLabel key={d} position={[p[0], 0.25, p[1]]} side={d === 'kapha' ? 'left' : 'right'} title={DNAME[d]} tone={c[d]} size="l" delay={0.6} />;
         })}
         {regions && REGIONS.map((r, i) => {
           const p = proj3(r.s);
@@ -196,25 +195,10 @@ export function GatesScene() {
           <DrawLine key={`k${g.n}`} points={[[-g.r * 0.7, 0.09, -g.r * 0.7], [-2.05, 1.92 - i * 0.8, -0.4]]} color={c[g.tone]} width={1} delay={0.3 + i * 0.2} />
         ))}
         {GATES.map((g, i) => (
-          <FloatLabel key={g.n} position={[-2.55, 2.05 - i * 0.8, -0.4]} title={`${g.n} · ${g.q.split(',')[0]}`} sub={g.stop ? 'עוצר' : 'מפנה וממשיך'} tone={c[g.tone]} size="s" active={lit === g.n} delay={0.4 + i * 0.2} />
+          <FloatLabel key={g.n} side={g.n === 2 ? 'right' : 'left'} position={[-0.72 * g.r, 0.08, -0.7 * g.r]} title={`${g.n} · ${g.q.split(',')[0]}`} sub={`${g.out}${g.stop ? ' · המודל לא מופעל' : ''}`} tone={c[g.tone]} size="s" active={lit === g.n} delay={0.4 + i * 0.2} />
         ))}
-        <FloatLabel position={[0, 0.2, 0.85]} title="4 · הסבר" sub="מסומן לפי סוג הטענה" tone={c.kapha} size="s" delay={1.2} />
+        <FloatLabel position={[0, 0.16, 0]} side="right" title="4 · עבר את כל השערים" sub="הסבר מסורתי, מסומן לפי סוג הטענה" tone={c.kapha} size="s" delay={1.2} />
       </Stage3D>
-      <ol className="gate-legend">
-        {GATES.map((g) => (
-          <li key={g.n} onMouseEnter={() => setHover(g.n)} onMouseLeave={() => setHover(null)} style={{ '--tone': `var(--${g.tone})` }} aria-current={lit === g.n ? 'true' : undefined}>
-            <span className="gate-n mono">{g.n}</span>
-            <span>
-              <b>{g.q}?</b>{g.ex && <span className="muted"> {g.ex}</span>}
-              <span className="gate-out">כן: <mark className="hl">{g.out}</mark>{g.stop ? '. המודל לא מופעל.' : '.'}</span>
-            </span>
-          </li>
-        ))}
-        <li style={{ '--tone': 'var(--kapha)' }}>
-          <span className="gate-n mono">4</span>
-          <span><b>עבר את כל השערים</b><span className="gate-out">הסבר מסורתי, מסומן לפי סוג הטענה, עם הפניה קצרה.</span></span>
-        </li>
-      </ol>
       <figcaption>האור הלבן הוא הודעה. היא נבדקת מבחוץ פנימה, לפני שהיא מגיעה למודל. טבעת מלאה עוצרת אותה, טבעת של פנינים מוסיפה הפניה וממשיכה.</figcaption>
     </figure>
   );
@@ -283,14 +267,14 @@ export function ClockScene({ routine = false }) {
         })}
         {CLOCK.map((s) => {
           const mid = (s.from + s.to) / 2;
-          return <FloatLabel key={`l${s.from}`} position={hourPos(mid, R + 0.62, 0.8)} title={DNAME[s.d]} sub={`${String(s.from % 24).padStart(2, '0')}–${String(s.to % 24).padStart(2, '0')}`} tone={c[s.d]} size="s" delay={0.3} />;
+          return <FloatLabel key={`l${s.from}`} position={hourPos(mid, R + 0.06, 0.8)} title={DNAME[s.d]} sub={`${String(s.from % 24).padStart(2, '0')}–${String(s.to % 24).padStart(2, '0')}`} tone={c[s.d]} size="s" delay={0.3} />;
         })}
         <Hand h={h} R={R} color={c.ember} />
-        <FloatLabel position={[0, 1.45, 0]} title={`עכשיו: שעת ${DNAME[cur]}`} sub={CLOCK_TEXT[cur].split('.')[0]} tone={c[cur]} size="l" delay={0.8} />
+        <FloatLabel position={hourPos(h, R * 0.9, 0.68)} title={`עכשיו: שעת ${DNAME[cur]}`} sub={CLOCK_TEXT[cur].split('.')[0]} tone={c[cur]} size="l" delay={0.8} />
         {routine && ROUTINE_MARKS.map((m, i) => (
           <group key={m.t}>
             <mesh position={hourPos(m.h, R + 0.06, 0.92)}><sphereGeometry args={[0.07, 24, 24]} /><meshStandardMaterial color="#FFFFFF" emissive="#FFF1CF" emissiveIntensity={1.4} toneMapped={false} /></mesh>
-            <FloatLabel position={hourPos(m.h, R - 0.55, 0.95)} title={m.t} tone={c.ink} size="s" delay={1 + i * 0.2} />
+            <FloatLabel position={hourPos(m.h, R + 0.06, 0.92)} title={m.t} tone={c.ink} size="s" delay={1 + i * 0.2} />
           </group>
         ))}
       </Stage3D>
@@ -361,7 +345,7 @@ export function AgniScene() {
           <group key={a.id} position={[X[i], 0, 0]} onClick={(e) => { e.stopPropagation(); setPick(a.id); }} onPointerOver={(e) => { e.stopPropagation(); setPick(a.id); }}>
             <Lamp id={a.id} on={pick === a.id} />
             {pick === a.id && <Ring key={pick} center={[0, 0.01, 0]} rx={0.85} rz={0.36} color={a.d ? c[a.d] : c.brass} width={1.5} />}
-            <FloatLabel position={[0, -0.42, 0.3]} title={a.t} sub={a.he} tone={pick === a.id ? (a.d ? c[a.d] : c.brass) : c.ink} active={pick === a.id} />
+            <FloatLabel position={[0, 0.6, 0]} title={a.t} sub={a.he} tone={pick === a.id ? (a.d ? c[a.d] : c.brass) : c.ink} active={pick === a.id} />
           </group>
         ))}
       </Stage3D>
@@ -399,7 +383,7 @@ export function DhatuScene() {
     <figure className="viz scene">
       <Stage3D camera={[0, 1.6, 7.4]} target={[0, 1.7, 0]} size={[7.6, 4.7]} label="שבע הרקמות, מנוזל התזונה ועד רקמת הרבייה">
         <mesh position={[0, 1.75, 0]}><cylinderGeometry args={[0.02, 0.02, 3.6, 12]} /><Brass /></mesh>
-        <FloatLabel position={[0, 4.0, 0]} title="מזון" sub="אהארה" tone={c.ink} size="s" />
+        <FloatLabel position={[0, 3.7, 0]} side="right" title="מזון" sub="אהארה" tone={c.ink} size="s" />
         {DHATUS.map((d, i) => {
           const y = 3.2 - i * 0.5;
           const on = lvl === i;
@@ -408,7 +392,7 @@ export function DhatuScene() {
             <group key={d.sk} position={[0, y, 0]}>
               <mesh scale={[1, 0.14, 1]}><sphereGeometry args={[r, 48, 24]} /><Glass color={on ? '#F3B06A' : '#F1E6D2'} thickness={0.4} tint={on ? 1 : 0} /></mesh>
               <mesh rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[r, 0.008, 8, 96]} /><meshBasicMaterial color={on ? c.ember : c.brass} /></mesh>
-              <FloatLabel position={[(i % 2 ? -1 : 1) * (r + 1.3), 0, 0]} title={`${d.t} · ${d.he}`} sub={d.sk} tone={on ? c.ember : c.ink} size="s" active={on} delay={0.2 + i * 0.12} />
+              <FloatLabel position={[(i % 2 ? -1 : 1) * r, 0, 0]} side={i % 2 ? 'left' : 'right'} title={`${d.t} · ${d.he}`} sub={d.sk} tone={on ? c.ember : c.ink} size="s" active={on} delay={0.2 + i * 0.12} />
             </group>
           );
         })}
@@ -440,12 +424,12 @@ export function SeasonsScene() {
             <group key={t} position={pos(i)} onPointerOver={(e) => { e.stopPropagation(); setHover(i); }} onPointerOut={() => setHover(null)}>
               <mesh><sphereGeometry args={[on ? 0.2 : 0.13, 32, 32]} /><meshStandardMaterial color={c[d]} emissive={c[d]} emissiveIntensity={on ? 1.6 : 0.6} roughness={0.3} toneMapped={false} /></mesh>
               {on && <Ring key={m} center={[0, -0.28, 0]} rx={0.34} rz={0.2} color={c[d]} width={1.4} />}
-              <FloatLabel position={[0, on ? -0.5 : -0.36, 0]} title={t} tone={on ? c[d] : c.muted} size="s" active={on} />
+              {on && <FloatLabel position={[0, 0, 0]} side="left" title={t} sub="החודש" tone={c[d]} size="s" active />}
             </group>
           );
         })}
         <Hover amp={0.05}><group position={[0, 0.5, 0]}><BodySculpture d={MONTH_DOSHA[m]} tint={tintOf(c, MONTH_DOSHA[m])} scale={0.58} /></group></Hover>
-        <FloatLabel position={[0, 2.35, 0]} title={`עונת ${DNAME[MONTH_DOSHA[m]]}`} sub={SEASON_TEXT[MONTH_DOSHA[m]].split(':')[0]} tone={c[MONTH_DOSHA[m]]} size="l" />
+        <FloatLabel position={[0, 1.45, 0]} side="right" title={`עונת ${DNAME[MONTH_DOSHA[m]]}`} sub={SEASON_TEXT[MONTH_DOSHA[m]].split(':')[0]} tone={c[MONTH_DOSHA[m]]} size="l" />
       </Stage3D>
       <figcaption>
         <Claim type="assessment" /> {MONTHS[m]}: {SEASON_TEXT[MONTH_DOSHA[m]]} ההתאמה לאקלים בישראל היא פרשנות, לא שש העונות ההודיות. עמדו על חודש.
@@ -469,7 +453,7 @@ export function LifeScene() {
           <group key={s.d} position={[s.x, 0, 0]}>
             <Plinth r={0.42} />
             <BodySculpture d={s.d} tint={tintOf(c, s.d)} scale={s.k} />
-            <FloatLabel position={[0, 2.55 * BUILD3D[s.d].h * s.k + 0.4, 0]} title={`${s.t} · ${DNAME[s.d]}`} sub={s.s} tone={c[s.d]} delay={0.4 + i * 0.3} />
+            <FloatLabel position={[0, 1.9 * BUILD3D[s.d].h * s.k, 0]} title={`${s.t} · ${DNAME[s.d]}`} sub={s.s} tone={c[s.d]} delay={0.4 + i * 0.3} />
           </group>
         ))}
         <Arrow from={[1.7, 0.08, 0.8]} to={[-1.7, 0.08, 0.8]} lift={0.25} color={c.brass} width={1.4} delay={0.2} />
@@ -505,17 +489,15 @@ export function VesselsScene({ effect }) {
   const c = useColors();
   const X = { vata: 1.3, pitta: 0, kapha: -1.3 };
   return (
-    <Stage3D camera={[0, 1.6, 6.4]} target={[0, 1.0, 0]} size={[4.1, 3.0]} label="שלושה כלים: גובה הנוזל הוא ההשפעה על כל דושה" className="vessels">
+    <Stage3D camera={[0, 1.6, 6.4]} target={[0, 1.0, 0]} size={[4.1, 3.0]} label="שלושה כלים: גובה הנוזל הוא ההשפעה על כל דושה" className="vessels" margins={false}>
       {ORDER.map((d) => {
         const s = effect[d].score;
         return (
           <group key={d} position={[X[d], 0, 0]}>
             <Vessel d={d} score={s} c={c} />
-            <FloatLabel position={[0, 2.35, 0]} title={DNAME[d]} sub={s > 0 ? `מגביר · ${s}` : s < 0 ? `מאזן · ${-s}` : 'ללא שינוי'} tone={c[d]} />
           </group>
         );
       })}
-      <FloatLabel position={[1.95, 0.95, 0]} title="קו האיזון" tone={c.brass} size="s" />
     </Stage3D>
   );
 }
@@ -557,11 +539,7 @@ export function ConstellationScene({ layout }) {
                   <sphereGeometry args={[r, 32, 32]} />
                   <meshStandardMaterial color={col} emissive={col} emissiveIntensity={hover === n.id ? 2.2 : on ? 1 : 0.25} transparent opacity={on ? 1 : 0.35} toneMapped={false} />
                 </mesh>
-                <Html position={[0, -r - 0.16, 0]} center zIndexRange={[20, 0]}>
-                  <button type="button" className={`star-label ${on ? '' : 'dim'}`} data-concept={n.id} aria-label={term[n.id].term}
-                    onMouseEnter={() => setHover(n.id)} onMouseLeave={() => setHover(null)} onFocus={() => setHover(n.id)} onBlur={() => setHover(null)}
-                    onClick={() => go(`/library/${n.id}`)}>{term[n.id].term}</button>
-                </Html>
+                <FloatLabel position={[0, 0, 0]} title={term[n.id].term} tone={col} size="s" active={hover === n.id} onClick={() => go(`/library/${n.id}`)} />
               </group>
             );
           })}

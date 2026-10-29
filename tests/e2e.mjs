@@ -104,12 +104,12 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   await page.goto(`${BASE}/#/maps/body`);
   ok(await page.waitForFunction(() => document.querySelector('.anatomy3d canvas') || (document.querySelector('.anatomy img')?.naturalWidth > 0), null, { timeout: 10000 }).then(() => true).catch(() => false), 'anatomy model or illustration loaded');
   ok((await page.locator('.anatomy3d figcaption, .anatomy-layout + figcaption').first().textContent()).includes('Mariana Ruiz'), 'anatomy credit shown');
-  ok(await page.waitForSelector('.anatomy3d .flabel:has-text("פיטה"), .anatomy img', { timeout: 10000 }).then(() => true).catch(() => false), 'dosha seats float beside the body');
+  ok(await page.waitForSelector('.anatomy3d .callout:has-text("פיטה"), .anatomy img', { timeout: 10000 }).then(() => true).catch(() => false), 'dosha seats labelled in the margin');
   await page.locator('.seat.d-pitta').first().click();
   ok((await page.locator('.seat.d-pitta').first().getAttribute('aria-pressed')) === 'true', 'body map seat selects pitta');
   await page.goto(`${BASE}/#/maps/clock`);
-  await page.waitForSelector('main .flabel, main svg text');
-  const centre = (await page.locator('main .flabel b, main svg text').allTextContents()).join(' ');
+  await page.waitForSelector('main .callout b, main svg text:not(.callout-num)', { timeout: 15000 });
+  const centre = (await page.locator('main .callout b, main svg text:not(.callout-num)').allTextContents()).join(' ');
   ok(/שעת (ואטה|פיטה|קאפה)/.test(centre) || ['ואטה', 'פיטה', 'קאפה'].some((d) => centre.includes(d)), 'dosha clock names the current dosha');
 
   // המסע: פרק אחד בכל מסך, עם דפדוף
@@ -146,7 +146,7 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   await page.locator('.seg-btn', { hasText: 'קאפה' }).click();
   ok((await page.locator('.build3d .legend-block, .build .legend-block').first().textContent()).includes('רחב'), 'kapha build is broad');
   await page.goto(`${BASE}/#/maps/safety`);
-  ok(await page.locator('.gate-legend li').count() === 4, 'safety gates legend has four steps');
+  ok(await page.waitForFunction(() => document.querySelectorAll('.gates3d .callout, .gate-legend li').length === 4, null, { timeout: 10000 }).then(() => true).catch(() => false), 'safety gates show four labelled steps');
 
   await page.goto(`${BASE}/#/maps/gunas`);
   // מעבדת האיכויות
@@ -164,7 +164,8 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
   // מפת הידע: מעבר למושג
   await page.goto(`${BASE}/#/maps/graph`);
   await page.waitForTimeout(1800);
-  await page.locator('button.star-label[data-concept="agni"], g[role="link"][aria-label="אש העיכול"]').first().click({ force: true });
+  await page.waitForSelector('.callout.clickable, g[role="link"]', { timeout: 10000 });
+  await page.locator('.callout.clickable', { hasText: 'אש העיכול' }).or(page.locator('g[role="link"][aria-label="אש העיכול"]')).first().click({ force: true });
   ok((await page.evaluate(() => location.hash)) === '#/library/agni', 'knowledge graph node opens the concept');
   ok(await page.waitForSelector('.concept-viz .viz', { timeout: 5000 }).then(() => true).catch(() => false), 'concept page has its visual');
   await page.locator('[aria-label^="טיקשנה"]').first().click({ force: true });
@@ -275,9 +276,16 @@ const noHScroll = (page) => page.evaluate(() => document.documentElement.scrollW
             if (tb.width && (tb.left < sb.left - 1 || tb.right > sb.right + 1 || tb.top < sb.top - 1 || tb.bottom > sb.bottom + 1)) cut.push(t.textContent.trim());
           }
         }
+        for (const st of document.querySelectorAll('main .stage3d:not(.callouts-numbered)')) {
+          const cv = st.querySelector('canvas')?.getBoundingClientRect();
+          for (const l of st.querySelectorAll('.callout')) {
+            const lb = l.getBoundingClientRect();
+            if (cv && lb.width && lb.right > cv.left + 2 && lb.left < cv.right - 2 && lb.bottom > cv.top && lb.top < cv.bottom) cut.push('ON-GRAPHIC:' + l.textContent.trim());
+          }
+        }
         for (const st of document.querySelectorAll('main .stage3d')) {
           const sb = st.getBoundingClientRect();
-          for (const l of st.querySelectorAll('.flabel, .star-label')) {
+          for (const l of st.querySelectorAll('.callout')) {
             const lb = l.getBoundingClientRect();
             if (lb.width && (lb.left < sb.left - 2 || lb.right > sb.right + 2 || lb.top < sb.top - 2 || lb.bottom > sb.bottom + 2)) cut.push(l.textContent.trim());
           }
