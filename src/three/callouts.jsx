@@ -11,7 +11,7 @@ const PRINT = {
   '#EBC47E': '#7A5E2A', '#FF6B5E': '#A8322A', '#EAF4FF': '#1F3326', '#FFB25A': '#B4581A', '#9DB4C4': '#5C5446', '#6B93AC': '#3F5A6B',
   '#FF5E4D': '#A8322A', '#3FA9F5': '#1F5F8B', '#3FC3E8': '#1F6F86', '#FFB03A': '#9A6110', '#FF7A2E': '#A4481A', '#D9673A': '#8E3F22',
 };
-export const printTone = (t) => PRINT[(t || '').toUpperCase()] || PRINT[t] || '#1F3326';
+export const printTone = (t) => PRINT[(t || '').toUpperCase()] || PRINT[t] || t || '#1F3326';
 
 export function createCalloutStore() {
   const items = new Map();
@@ -158,9 +158,9 @@ export function Callouts({ store, stageRef }) {
       <svg ref={svgRef} className="callout-lines" aria-hidden="true">
         {list.map(([id, it], i) => (
           <g key={id} data-id={id} className={it.active ? 'on' : ''}>
-            <path className="halo" stroke={printTone(it.tone)} />
-            <path className="core" stroke={it.tone || '#EAF4FF'} />
-            <circle r={it.active ? 4.5 : 3.2} fill={it.tone || '#EAF4FF'} stroke={printTone(it.tone)} strokeWidth="1" />
+            <path className="halo" stroke="#FFFFFF" />
+            <path className="core" stroke={printTone(it.tone)} />
+            <circle r={it.active ? 4.5 : 3.2} fill={printTone(it.tone)} stroke="#FFFFFF" strokeWidth="1.5" />
             <text className="callout-num" textAnchor="middle">{i + 1}</text>
           </g>
         ))}

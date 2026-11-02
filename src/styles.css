@@ -661,3 +661,24 @@ main { padding: 0; }
 }
 .stage3d.no-margins { --col: 0px; }
 @media (min-width: 1024px) and (min-height: 620px) { .concept-viz .anatomy3d .stage3d { height: calc(var(--screen-h) - 300px); } }
+
+/* ===== רקע לבן וחלל שקוף (תיקון של ענת, 2026-11-02) ===== */
+@media not (prefers-color-scheme: dark) { :root:not([data-theme="dark"]) { --bg: #FFFFFF; --raised: #FFFFFF; --veil: #F3F5F6; --hair: #E2E4E6; } }
+:root[data-theme="light"] { --bg: #FFFFFF; --raised: #FFFFFF; --veil: #F3F5F6; --hair: #E2E4E6; }
+body { background-image: none; }
+.ambient { display: none; }
+.topbar { background: color-mix(in srgb, var(--bg) 94%, transparent); }
+/* הבמה: בלי בועה כהה. חלל שקוף, ועומק מגרדיאנט רך שנמוג אל הלבן */
+.stage3d.holo canvas { -webkit-mask-image: none !important; mask-image: none !important; }
+.stage3d .stage-canvas {
+  background:
+    radial-gradient(ellipse 46% 40% at 50% 60%, rgba(47, 127, 193, .07), rgba(47, 127, 193, 0) 70%),
+    radial-gradient(ellipse 62% 58% at 50% 54%, #EEF2F5 0%, #F6F8F9 42%, rgba(255, 255, 255, 0) 78%);
+}
+.stage3d.loading { background: radial-gradient(ellipse 60% 58% at 50% 54%, #F1F4F6 30%, transparent 80%); }
+.callout-lines path.halo { stroke-width: 3; opacity: .9; }
+.stage3d.holo .stage-canvas canvas {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 8%, #000 80%, transparent 100%), linear-gradient(to left, transparent 0, #000 7%, #000 93%, transparent 100%) !important;
+  -webkit-mask-composite: source-in; mask-composite: intersect;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 8%, #000 80%, transparent 100%), linear-gradient(to left, transparent 0, #000 7%, #000 93%, transparent 100%) !important;
+}

@@ -18,22 +18,22 @@ const LAYERS = [
 
 // צבע וחומר לכל איבר. base הוא מילוי פנימי, glow הוא שוליים.
 const ORGANS = {
-  skin: { layer: 'skin', c: '#3FA9F5', base: 0.004, glow: 0.7, power: 3.2 },
-  bones: { layer: 'bones', c: '#A9D8FF', base: 0.006, glow: 0.42, power: 2.6 },
-  brain: { layer: 'bones', c: '#8FA8FF', base: 0.004, glow: 0.22, power: 3 },
-  lungR: { layer: 'breath', c: '#FF6F5E', base: 0.025, glow: 0.9, power: 2.2, name: 'ריאה ימנית' },
-  lungL: { layer: 'breath', c: '#FF6F5E', base: 0.025, glow: 0.9, power: 2.2, name: 'ריאה שמאלית' },
-  airway: { layer: 'breath', c: '#FFB35C', base: 0.22, glow: 0.9, power: 1.6, name: 'קנה הנשימה והסימפונות' },
-  heart: { layer: 'breath', c: '#FF3D5A', base: 0.12, glow: 1.1, power: 1.8, name: 'לב' },
-  diaphragm: { layer: 'breath', c: '#E0874E', base: 0.005, glow: 0.35, power: 2.6, name: 'סרעפת' },
-  esophagus: { layer: 'digest', c: '#4FA3FF', base: 0.25, glow: 1, power: 1.8, name: 'ושט' },
-  stomach: { layer: 'digest', c: '#3FC3E8', base: 0.08, glow: 1.0, power: 1.9, name: 'קיבה' },
-  liver: { layer: 'digest', c: '#D9673A', base: 0.05, glow: 0.95, power: 2, name: 'כבד' },
-  pancreas: { layer: 'digest', c: '#F3B06A', base: 0.12, glow: 1, power: 1.8, name: 'לבלב' },
-  small: { layer: 'digest', c: '#FFB03A', base: 0.09, glow: 1.0, power: 1.8, name: 'מעי דק' },
-  large: { layer: 'digest', c: '#FF7A2E', base: 0.08, glow: 1.05, power: 1.8, name: 'מעי גס' },
-  kidneys: { layer: 'digest', c: '#C98A6B', base: 0.06, glow: 0.8, power: 2, name: 'כליות' },
-  bladder: { layer: 'digest', c: '#9FC9E8', base: 0.05, glow: 0.7, power: 2 },
+  skin: { layer: 'skin', c: '#2F7FC1', base: 0.0, glow: 0.62, power: 2.6 },
+  bones: { layer: 'bones', c: '#6E8496', base: 0.006, glow: 0.55, power: 2.3 },
+  brain: { layer: 'bones', c: '#7A86B8', base: 0.01, glow: 0.35, power: 2.4 },
+  lungR: { layer: 'breath', c: '#D44A3A', base: 0.07, glow: 0.85, power: 2.0, name: 'ריאה ימנית' },
+  lungL: { layer: 'breath', c: '#D44A3A', base: 0.07, glow: 0.85, power: 2.0, name: 'ריאה שמאלית' },
+  airway: { layer: 'breath', c: '#D9782A', base: 0.35, glow: 0.7, power: 1.6, name: 'קנה הנשימה והסימפונות' },
+  heart: { layer: 'breath', c: '#B51E3A', base: 0.3, glow: 0.8, power: 1.8, name: 'לב' },
+  diaphragm: { layer: 'breath', c: '#C9874E', base: 0.01, glow: 0.35, power: 2.4, name: 'סרעפת' },
+  esophagus: { layer: 'digest', c: '#3A7FC0', base: 0.25, glow: 0.7, power: 1.8, name: 'ושט' },
+  stomach: { layer: 'digest', c: '#1F8FB5', base: 0.16, glow: 0.8, power: 1.9, name: 'קיבה' },
+  liver: { layer: 'digest', c: '#9C4328', base: 0.16, glow: 0.8, power: 2, name: 'כבד' },
+  pancreas: { layer: 'digest', c: '#C98E3A', base: 0.18, glow: 0.7, power: 1.8, name: 'לבלב' },
+  small: { layer: 'digest', c: '#D98A16', base: 0.2, glow: 0.8, power: 1.8, name: 'מעי דק' },
+  large: { layer: 'digest', c: '#C9551E', base: 0.18, glow: 0.85, power: 1.8, name: 'מעי גס' },
+  kidneys: { layer: 'digest', c: '#A0603F', base: 0.1, glow: 0.6, power: 2, name: 'כליות' },
+  bladder: { layer: 'digest', c: '#5F8FB0', base: 0.08, glow: 0.5, power: 2 },
 };
 
 const SEATS = [
@@ -126,7 +126,7 @@ export function AnatomyScene({ highlight = null }) {
 
   return (
     <figure className="viz scene anatomy3d">
-      <Stage3D camera={[0, 0.15, 6]} target={[0, H * 0.745, 0]} size={[1.2, H * 0.53]} fov={30} bloom={0.55} label="מודל אנטומי: איברי הנשימה והעיכול, ומושבי הדושות לפי המסורת" shadowY={0} shadowScale={4}>
+      <Stage3D camera={[0, 0.15, 6]} target={[0, H * 0.745, 0]} size={[1.2, H * 0.53]} fov={30} label="מודל אנטומי: איברי הנשימה והעיכול, ומושבי הדושות לפי המסורת" shadowY={0} shadowScale={4}>
         {body && (
           <>
             <Scanner top={H * 0.98} bottom={H * 0.42} />

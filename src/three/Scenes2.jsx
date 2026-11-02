@@ -325,8 +325,8 @@ function Lamp({ id, on }) {
       <mesh geometry={bowl} position={[0, 0.06, 0]}><meshStandardMaterial color="#B8893E" metalness={1} roughness={0.25} side={THREE.DoubleSide} /></mesh>
       <mesh position={[0, 0.27, 0]} rotation={[-Math.PI / 2, 0, 0]}><circleGeometry args={[0.55, 48]} /><meshStandardMaterial color="#7A5A20" roughness={0.2} metalness={0.3} /></mesh>
       <group ref={f} position={[0, 0.3, 0]}>
-        <mesh geometry={geo}><meshBasicMaterial color="#E8742C" transparent opacity={on ? 0.6 : 0.3} depthWrite={false} blending={THREE.AdditiveBlending} /></mesh>
-        <mesh geometry={geo} scale={[0.6, 0.7, 0.6]}><meshBasicMaterial color="#FFB35C" transparent opacity={on ? 0.85 : 0.4} depthWrite={false} blending={THREE.AdditiveBlending} /></mesh>
+        <mesh geometry={geo}><meshBasicMaterial color="#E8742C" transparent opacity={on ? 0.6 : 0.3} depthWrite={false} /></mesh>
+        <mesh geometry={geo} scale={[0.6, 0.7, 0.6]}><meshBasicMaterial color="#FFB35C" transparent opacity={on ? 0.85 : 0.4} depthWrite={false} /></mesh>
         <mesh geometry={geo} scale={[0.3, 0.38, 0.3]}><meshBasicMaterial color="#FFF4D8" transparent opacity={on ? 1 : 0.5} /></mesh>
       </group>
       <pointLight ref={light} position={[0, 0.7, 0]} distance={2.6} color="#FF9F50" />
